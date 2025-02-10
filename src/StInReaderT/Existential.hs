@@ -1,5 +1,7 @@
 -- {-# LANGUAGE ImpredicativeTypes #-}
 
+-- failed, don't know how to continue.
+
 module StInReaderT.Existential where
 
 import Control.Monad.ST
