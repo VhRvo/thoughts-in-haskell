@@ -1,6 +1,7 @@
 {-# LANGUAGE GADTs #-}
 
 -------------------------------------------------------------------------------
+
 -- |
 -- Module      : Control.Monad.CC.Dynvar
 -- Copyright   : (c) Amr Sabry, Chung-chieh Shan and Oleg Kiselyov
@@ -19,30 +20,31 @@
 -- monad (in practice, this is likely just CC and CCT m).
 --
 -- See below for usage examples.
-module Control.Monad.CC.Dynvar (
-        -- * The Dynvar type
-        Dynvar(),
-        dnew,
-        dref,
-        dset,
-        dmod,
-        dupp,
-        dlet,
-        module Control.Monad.CC
-        -- * examples
-        -- $examples
-    ) where
+module Control.Monad.CC.Dynvar
+  ( -- * The Dynvar type
+    Dynvar (),
+    dnew,
+    dref,
+    dset,
+    dmod,
+    dupp,
+    dlet,
+    module Control.Monad.CC,
+
+    -- * examples
+    -- $examples
+  )
+where
 
 import Control.Monad
-
 import Control.Monad.CC
 
 -- | The type of dynamically scoped variables in a given monad
 data Dynvar m a where
-    Dynvar :: MonadDelimitedCont p s m => p (a -> m a) -> Dynvar m a
+  Dynvar :: (MonadDelimitedCont p s m) => p (a -> m a) -> Dynvar m a
 
 -- | Creates a new dynamically scoped variable
-dnew :: MonadDelimitedCont p s m => m (Dynvar m a)
+dnew :: (MonadDelimitedCont p s m) => m (Dynvar m a)
 dnew = Dynvar `liftM` newPrompt
 
 -- | Reads the value of a dynamically scoped variable
@@ -63,11 +65,16 @@ dupp p@(Dynvar _) g = dref p >>= g
 
 -- | Introduces a new value to the dynamic variable over a block
 dlet :: Dynvar m a -> a -> m b -> m b
-dlet (Dynvar p) v body = reset (\q ->
-                            pushPrompt p (body >>= (\z -> abort q (return z)))
-                                >>= ($ v) >>= undefined)
+dlet (Dynvar p) v body =
+  reset
+    ( \q ->
+        pushPrompt p (body >>= (\z -> abort q (return z)))
+          >>= ($ v)
+          >>= undefined
+    )
 
 -------------------------------------------------------------------------------
+
 -- $examples
 -- The referenced paper provides a full treatment of the behavior of
 -- dynamically scoped variables and their interaction with delimited control.
@@ -157,4 +164,3 @@ dlet (Dynvar p) v body = reset (\q ->
 -- dynamic bindings back in place, but will not restore those dynamic bindings
 -- outside of the delimited context (it will, instead, use those visible where
 -- the context is invoked.
-

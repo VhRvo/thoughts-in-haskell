@@ -4,8 +4,8 @@
 
 module StInReaderT.Existential where
 
-import Control.Monad.ST
 import Control.Monad.Reader
+import Control.Monad.ST
 
 -- newtype RST r a = RST (ReaderT r (forall s. ST s) a)
 --   deriving
@@ -24,9 +24,3 @@ import Control.Monad.Reader
 
 -- runRST :: forall r a. RST r a -> r -> a
 -- runRST (RST rst) r = runST (runReaderT r rst)
-
-
-
-
-
-

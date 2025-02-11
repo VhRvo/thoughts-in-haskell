@@ -23,6 +23,7 @@ runReaderT' r m = runReaderT m r
 runRST :: forall r a. (forall s. RST r s a) -> r -> a
 -- ($) is impredicative by special compiler magic.
 runRST rst r = runST $ runReaderT' r $ unRST rst
+
 -- use ImpredicativeTypes extension
 -- runRST rst r = runST . runReaderT' r . unRST $ rst
 
@@ -32,8 +33,8 @@ test1 = runRST test1' 2
   where
     test1' :: RST Int s Int
     test1' = do
-        env <- ask
-        pure (env + 1)
+      env <- ask
+      pure (env + 1)
 
 -- >>> test2
 test2 :: Int
@@ -41,10 +42,7 @@ test2 = runRST test2' 2
   where
     test2' :: RST Int s Int
     test2' = do
-        env <- ask
-        ref <- RST (ReaderT (\_ -> newSTRef @Int 1))
-        value <- RST (ReaderT (\_ -> readSTRef ref))
-        pure (env + value)
-
-
-
+      env <- ask
+      ref <- RST (ReaderT (\_ -> newSTRef @Int 1))
+      value <- RST (ReaderT (\_ -> readSTRef ref))
+      pure (env + value)

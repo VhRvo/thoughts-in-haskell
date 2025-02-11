@@ -5,9 +5,9 @@ module ReaderTrick.Normal where
 
 import Control.Monad.Except
 import Control.Monad.Reader
-import qualified Data.Map.Strict as Map
-import Data.Text (Text)
+import Data.Map.Strict qualified as Map
 import Data.Maybe (fromMaybe)
+import Data.Text (Text)
 
 data Term
   = Variable Text
@@ -80,10 +80,8 @@ newtype EvalM a
 
 eval :: Expr -> EvalM Int
 eval = \case
-    Literal int -> pure int
-    Var name -> asks (fromMaybe 0 . Map.lookup name)
-    Let name expr body -> do
-        value <- eval expr
-        local (Map.insert name value) (eval body)
-
-
+  Literal int -> pure int
+  Var name -> asks (fromMaybe 0 . Map.lookup name)
+  Let name expr body -> do
+    value <- eval expr
+    local (Map.insert name value) (eval body)

@@ -7,7 +7,7 @@ split :: [a] -> [[a]]
 split = foldr (\x acc -> (x : head acc) : acc) [[]]
 
 dropWhile' :: (a -> Bool) -> [a] -> [a]
-dropWhile' predicate = foldr (\(x:xs) acc -> if predicate x then acc else xs) [] . split
+dropWhile' predicate = foldr (\(x : xs) acc -> if predicate x then acc else xs) [] . split
 
 -- >>> dropWhile (<5) [1..10]
 
@@ -19,16 +19,23 @@ dropWhile' predicate = foldr (\(x:xs) acc -> if predicate x then acc else xs) []
 --         else list
 
 dW :: (a -> Bool) -> [a] -> [a]
-dW predicate list' = foldr (\_ acc list -> case list of
-    [] -> []
-    x:xs -> if predicate x
-        then acc xs
-        else list) id list' list'
+dW predicate list' =
+  foldr
+    ( \_ acc list -> case list of
+        [] -> []
+        x : xs ->
+          if predicate x
+            then acc xs
+            else list
+    )
+    id
+    list'
+    list'
 
 -- dW' :: (a
 dWNonRec :: ((a -> Bool) -> [a] -> [a]) -> (a -> Bool) -> [a] -> [a]
 dWNonRec recurse predicate [] = []
-dWNonRec recurse predicate list@(head:tail) =
-    if predicate head
-        then recurse predicate tail
-        else list
+dWNonRec recurse predicate list@(head : tail) =
+  if predicate head
+    then recurse predicate tail
+    else list

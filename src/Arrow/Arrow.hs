@@ -4,7 +4,7 @@
 module Arrow.Arrow where
 
 import Control.Arrow
-import qualified Control.Category as Cat
+import Control.Category qualified as Cat
 import Control.Monad
 import Data.List
 import Data.Maybe
@@ -22,9 +22,11 @@ instance Cat.Category Circuit where
       (Circuit cir2) `dot` (Circuit cir1) =
         Circuit
           ( \x ->
-              let (cir1', y) = cir1 x
-                  (cir2', z) = cir2 y
-               in (cir2' `dot` cir1', z)
+              let
+                (cir1', y) = cir1 x
+                (cir2', z) = cir2 y
+               in
+                (cir2' `dot` cir1', z)
           )
 
 instance Arrow Circuit where

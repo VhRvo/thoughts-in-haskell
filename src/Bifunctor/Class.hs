@@ -56,7 +56,6 @@ hylo f g = g . bimap id (hylo f g) . f
 build :: (Bifunctor s) => (forall b. (s a b -> b) -> b) -> Fix s a
 build f = f In
 
-
 data (m :*: n) a = Prod {pFst :: m a, pSnd :: n a}
 
 (<:*:>) :: (Functor m, Functor n) => (a -> m b) -> (a -> n b) -> a -> (m :*: n) b

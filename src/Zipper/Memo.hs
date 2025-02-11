@@ -23,5 +23,5 @@ goUpMemo (Location focus path) = case path of
 
 goDownMemo :: Location a -> Either Text (Location a)
 goDownMemo (Location focus path) = case focus of
-    Item _ -> Left "down of item"
-    Sibling left tree right -> pure $ Location tree (Node left path right)
+  Item _ -> Left "down of item"
+  Sibling left tree right -> pure $ Location tree (Node left path right)

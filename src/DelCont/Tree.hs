@@ -1,10 +1,8 @@
 module DelCont.Tree where
 
 import Control.Monad.CC -- (MonadDelimitedCont, reset, shift)
-import Control.Monad.IO.Class (MonadIO(liftIO))
-
+import Control.Monad.IO.Class (MonadIO (liftIO))
 import Data.Maybe (fromJust)
-
 import System.Random (randomRIO)
 
 -- import Control.Monad.CC (reset)
@@ -63,21 +61,21 @@ finished = \case
 
 main :: IO ()
 main = runCCT $ do
-    t <- randomTree 10
-    i <- begin t
-    doStuff i
+  t <- randomTree 10
+  i <- begin t
+  doStuff i
   where
     doStuff i
-        | finished i = pure ()
-        | otherwise = do
-            i' <- next i
-            i'' <- next i' -- this is ignored
-            liftIO $ print (fromJust $ current i :: Int)
-            doStuff i'
+      | finished i = pure ()
+      | otherwise = do
+          i' <- next i
+          i'' <- next i' -- this is ignored
+          liftIO $ print (fromJust $ current i :: Int)
+          doStuff i'
 
 randomTree n = rt empty n
   where
     rt t 0 = pure t
     rt t n = do
-        r <- liftIO (randomRIO (1, 100))
-        rt (insert r t) (n - 1)
+      r <- liftIO (randomRIO (1, 100))
+      rt (insert r t) (n - 1)

@@ -1,6 +1,9 @@
-{-# LANGUAGE GADTs, MultiParamTypeClasses, FunctionalDependencies  #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 -------------------------------------------------------------------------------
+
 -- |
 -- Module      : Control.Monad.CC.Cursor
 -- Copyright   : (c) Dan Doel
@@ -12,30 +15,30 @@
 --                             Functional Dependencies)
 --
 -- Implements various cursor datatypes for iterating over collections
-module Control.Monad.CC.Cursor (
-        Cursor(..),
-        Iterator,
-        generator,
-        iterator,
-        current,
-        next,
-        open,
-        update,
---        Walkable(..),
---        Zipper,
---        zipper,
---        previousDir,
---        currentTerm,
---        move
-    ) where
+module Control.Monad.CC.Cursor
+  ( Cursor (..),
+    Iterator,
+    generator,
+    iterator,
+    current,
+    next,
+    open,
+    update,
+    --        Walkable(..),
+    --        Zipper,
+    --        zipper,
+    --        previousDir,
+    --        currentTerm,
+    --        move
+  )
+where
 
-import Prelude hiding (zip, mapM, mapM_)
 import Control.Monad hiding (mapM, mapM_)
 import Control.Monad.CC
-
-import Data.Maybe
 import Data.Foldable
+import Data.Maybe
 import Data.Traversable hiding (traverse)
+import Prelude hiding (mapM, mapM_, zip)
 
 -- | A generalized type that represents a reified data structure traversal.
 -- The other traversal data types in this module are special cases of this
@@ -52,8 +55,8 @@ import Data.Traversable hiding (traverse)
 -- a : The element type to which the Cursor provides access at each step in
 --     the traversal.
 data Cursor m r b a where
-   Current :: Monad m => a -> (b -> m (Cursor m r b a)) -> Cursor m r b a
-   Done    :: Monad m => r -> Cursor m r b a
+  Current :: (Monad m) => a -> (b -> m (Cursor m r b a)) -> Cursor m r b a
+  Done :: (Monad m) => r -> Cursor m r b a
 
 -- | A simple iterator, which provides a way to view each of the elements of
 -- a data structure in order.
@@ -63,14 +66,18 @@ type Iterator m a = Cursor m () () a
 -- using 'yield' in Ruby or Python. For example:
 --
 -- > generator $ \yield -> do a <- yield 1 ; yield 2 ; b <- yield 3 ; return [a,b]
-generator :: MonadDelimitedCont p s m => ((a -> m b) -> m r) -> m (Cursor m r b a)
+generator :: (MonadDelimitedCont p s m) => ((a -> m b) -> m r) -> m (Cursor m r b a)
 generator f = reset (\p -> Done `liftM` f (yield p))
- where yield p a = shift p (\k -> return $ Current a (k . return))
+  where
+    yield p a = shift p (\k -> return $ Current a (k . return))
 
 -- A general cursor builder; takes the traversal function, a data structure, and
 -- returns a corresponding cursor. Currently not exported, just used internally.
-makeCursor :: (MonadDelimitedCont p s m) =>
-                ((a -> m b) -> t -> m r) -> t -> m (Cursor m r b a)
+makeCursor ::
+  (MonadDelimitedCont p s m) =>
+  ((a -> m b) -> t -> m r) ->
+  t ->
+  m (Cursor m r b a)
 makeCursor iter t = generator $ flip iter t
 
 -- | Creates an Iterator that will yield each of the elements of a Foldable in
@@ -84,7 +91,7 @@ next = update ()
 
 -- | Extracts the current element from a cursor, if applicable.
 current :: Cursor m r b a -> Maybe a
-current (Done _)      = Nothing
+current (Done _) = Nothing
 current (Current a _) = Just a
 
 -- | Begins an updating traversal over a Traversable structure. At each step,
@@ -97,7 +104,7 @@ open = makeCursor mapM
 -- | Provides an item to a Cursor, moving on to the next step in the traversal.
 -- (has no effect on a finished Cursor).
 update :: b -> Cursor m r b a -> m (Cursor m r b a)
-update _ c@(Done _)    = return c
+update _ c@(Done _) = return c
 update b (Current _ k) = k b
 
 -- Removing for now. This isn't remotely done, and I need to reread ccshan's

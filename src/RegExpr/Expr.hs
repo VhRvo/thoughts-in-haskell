@@ -35,6 +35,5 @@ many (Many e) = Many e
 many e = Many e
 
 instance IsString Expr where
-    fromString :: String -> Expr
-    fromString = foldr ((<>) . Literal) One
-
+  fromString :: String -> Expr
+  fromString = foldr ((<>) . Literal) One

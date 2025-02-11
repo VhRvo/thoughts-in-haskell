@@ -67,9 +67,10 @@ mkCDList'' (a : as) = Right first
     go prev x nextOfLast xs = case xs of
       [] -> let current = Cons x prev nextOfLast in (current, current)
       y : ys ->
-        let (rest, last) = go this y nextOfLast ys
-            this = Cons x prev rest
-         in (this, last)
+        let
+          (rest, last) = go this y nextOfLast ys
+          this = Cons x prev rest
+         in
+          (this, last)
 
 test'' = takeR 10 <$> mkCDList'' "ABCD"
-

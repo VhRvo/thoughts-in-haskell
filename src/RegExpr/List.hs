@@ -39,7 +39,7 @@ acceptMany expr input = cont $ \k ->
 --   Literal -> do
 --     input <- get
 --     case input of
---         "" -> 
+--         "" ->
 
 --   One -> cont . const . null $ input
 --   Literal ch -> case input of

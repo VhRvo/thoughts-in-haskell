@@ -4,7 +4,7 @@ module TardisAsm where
 
 import Control.Monad.Tardis
 import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import Data.Text (Text)
 
 type Address = Int
@@ -59,10 +59,11 @@ assemble address (instruction : is) = case instruction of
     bw <- getFuture
     fw <- getPast
     -- take union of the two symbol tables
-    let union = Map.union bw fw
-        this = case Map.lookup label union of
-          Just a' -> (address, ToAddress a')
-          Nothing -> (address, Err)
+    let
+      union = Map.union bw fw
+      this = case Map.lookup label union of
+        Just a' -> (address, ToAddress a')
+        Nothing -> (address, Err)
     rest <- assemble (address + 1) is
     pure $ this : rest
   -- regular instruction found, assign it to the address,

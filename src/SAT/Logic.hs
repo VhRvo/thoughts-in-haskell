@@ -2,7 +2,7 @@ module SAT.Logic where
 
 import Control.Monad.State.Strict hiding (state)
 import Data.Map.Strict ((!?))
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 -- import Data.Text
 
 import SAT.Formulae

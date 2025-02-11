@@ -1,10 +1,10 @@
 module SimpleRustSyntax where
 
 import Data.Text (Text)
+import Data.Void (Void)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer as L
-import Data.Void (Void)
 
 newtype Identifier = Identifier Text
   deriving (Eq, Ord, Show)
@@ -70,9 +70,3 @@ newtype Identifier = Identifier Text
 -- data ExpressionStatement
 --     = ExprWithBlockStmt ExprWithBlock
 --     | ExprWithoutBlockStmt ExprWithoutBlock
-
-
-
-
-
-

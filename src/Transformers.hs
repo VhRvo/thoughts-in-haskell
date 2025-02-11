@@ -2,18 +2,29 @@
 
 module Transformers where
 
-import Control.Monad.IO.Class ( MonadIO(..) )
 import Control.Monad.Except
-    ( MonadError(throwError), runExceptT, ExceptT(..) )
-import Control.Monad.Identity ( Identity(..) )
+  ( ExceptT (..),
+    MonadError (throwError),
+    runExceptT,
+  )
+import Control.Monad.IO.Class (MonadIO (..))
+import Control.Monad.Identity (Identity (..))
 import Control.Monad.Reader
-    ( asks, MonadReader(local, ask), ReaderT(..) )
+  ( MonadReader (ask, local),
+    ReaderT (..),
+    asks,
+  )
 import Control.Monad.State.Strict
-    ( modify, MonadState, StateT(runStateT) )
+  ( MonadState,
+    StateT (runStateT),
+    modify,
+  )
 import Control.Monad.Writer.Strict
-    ( MonadWriter(tell), WriterT(runWriterT) )
-import qualified Data.Map.Strict as Map
-import Data.Maybe ( fromJust )
+  ( MonadWriter (tell),
+    WriterT (runWriterT),
+  )
+import Data.Map.Strict qualified as Map
+import Data.Maybe (fromJust)
 import Data.Text (Text)
 
 type Name = Text
@@ -38,15 +49,19 @@ eval0 env = \case
   Literal i -> IntegerV i
   Variable name -> fromJust (Map.lookup name env)
   Plus e1 e2 ->
-    let IntegerV i1 = eval0 env e1
-        IntegerV i2 = eval0 env e2
-     in IntegerV (i1 + i2)
+    let
+      IntegerV i1 = eval0 env e1
+      IntegerV i2 = eval0 env e2
+     in
+      IntegerV (i1 + i2)
   Abstraction name body -> FunctionV env name body
   Application e1 e2 ->
-    let val1 = eval0 env e1
-        val2 = eval0 env e2
-     in case val1 of
-          FunctionV env' name body -> eval0 (Map.insert name val2 env') body
+    let
+      val1 = eval0 env e1
+      val2 = eval0 env e2
+     in
+      case val1 of
+        FunctionV env' name body -> eval0 (Map.insert name val2 env') body
 
 exampleExpr :: Expr
 exampleExpr = Literal 12 `Plus` Application (Abstraction "x" (Variable "x")) (Literal 4 `Plus` Literal 2)
@@ -164,34 +179,34 @@ runEval4' env st = runIdentity . (`runStateT` st) . runExceptT . (`runReaderT` e
 
 eval4 :: Expr -> Eval4 Value
 eval4 = \case
-    Literal i -> do
-        tick
-        pure (IntegerV i)
-    Variable name -> do
-        tick
-        env <- ask
-        case Map.lookup name env of
-            Nothing -> throwError ("variable not found: " <> name)
-            Just value -> pure value
-    Plus e1 e2 -> do
-        tick
-        e1' <- eval4 e1
-        e2' <- eval4 e2
-        case (e1', e2') of
-            (IntegerV i1, IntegerV i2) -> do
-                pure (IntegerV (i1 + i2))
-            _ -> throwError "type error in plus"
-    Abstraction name body -> do
-        tick
-        asks (\env -> FunctionV env name body)
-    Application e1 e2  -> do
-        tick
-        e1' <- eval4 e1
-        arg <- eval4 e2
-        case e1' of
-            FunctionV env name body ->
-                local (const (Map.insert name arg env)) (eval4 body)
-            _ -> throwError "type error in application"
+  Literal i -> do
+    tick
+    pure (IntegerV i)
+  Variable name -> do
+    tick
+    env <- ask
+    case Map.lookup name env of
+      Nothing -> throwError ("variable not found: " <> name)
+      Just value -> pure value
+  Plus e1 e2 -> do
+    tick
+    e1' <- eval4 e1
+    e2' <- eval4 e2
+    case (e1', e2') of
+      (IntegerV i1, IntegerV i2) -> do
+        pure (IntegerV (i1 + i2))
+      _ -> throwError "type error in plus"
+  Abstraction name body -> do
+    tick
+    asks (\env -> FunctionV env name body)
+  Application e1 e2 -> do
+    tick
+    e1' <- eval4 e1
+    arg <- eval4 e2
+    case e1' of
+      FunctionV env name body ->
+        local (const (Map.insert name arg env)) (eval4 body)
+      _ -> throwError "type error in application"
 
 newtype Eval'4 a = Eval'4 {runEval'4 :: ReaderT Env (StateT Int (ExceptT Text Identity)) a}
   deriving newtype (Functor, Applicative, Monad, MonadReader Env, MonadState Int, MonadError Text)
@@ -200,78 +215,78 @@ runEval'4' :: Env -> Int -> Eval'4 Value -> Either Text (Value, Int)
 runEval'4' env st = runIdentity . runExceptT . (`runStateT` st) . (`runReaderT` env) . runEval'4
 
 newtype Eval5 a = Eval5 {runEval5 :: ReaderT Env (ExceptT Text (WriterT [Text] (StateT Int Identity))) a}
-    deriving newtype (Functor, Applicative, Monad, MonadReader Env, MonadError Text, MonadWriter [Text], MonadState Int)
+  deriving newtype (Functor, Applicative, Monad, MonadReader Env, MonadError Text, MonadWriter [Text], MonadState Int)
 
 runEval5' :: Env -> Int -> Eval5 Value -> ((Either Text Value, [Text]), Int)
 runEval5' env st = runIdentity . (`runStateT` st) . runWriterT . runExceptT . (`runReaderT` env) . runEval5
 
 eval5 :: Expr -> Eval5 Value
 eval5 = \case
-    Literal i -> do
-        tick
-        pure (IntegerV i)
-    Variable name -> do
-        tick
-        tell [name]
-        env <- ask
-        case Map.lookup name env of
-            Nothing -> throwError ("variable not found: " <> name)
-            Just value -> pure value
-    Plus e1 e2 -> do
-        tick
-        e1' <- eval5 e1
-        e2' <- eval5 e2
-        case (e1', e2') of
-            (IntegerV i1, IntegerV i2) -> do
-                pure (IntegerV (i1 + i2))
-            _ -> throwError "type error in plus"
-    Abstraction name body -> do
-        tick
-        asks (\env -> FunctionV env name body)
-    Application e1 e2  -> do
-        tick
-        e1' <- eval5 e1
-        arg <- eval5 e2
-        case e1' of
-            FunctionV env name body ->
-                local (const (Map.insert name arg env)) (eval5 body)
-            _ -> throwError "type error in application"
+  Literal i -> do
+    tick
+    pure (IntegerV i)
+  Variable name -> do
+    tick
+    tell [name]
+    env <- ask
+    case Map.lookup name env of
+      Nothing -> throwError ("variable not found: " <> name)
+      Just value -> pure value
+  Plus e1 e2 -> do
+    tick
+    e1' <- eval5 e1
+    e2' <- eval5 e2
+    case (e1', e2') of
+      (IntegerV i1, IntegerV i2) -> do
+        pure (IntegerV (i1 + i2))
+      _ -> throwError "type error in plus"
+  Abstraction name body -> do
+    tick
+    asks (\env -> FunctionV env name body)
+  Application e1 e2 -> do
+    tick
+    e1' <- eval5 e1
+    arg <- eval5 e2
+    case e1' of
+      FunctionV env name body ->
+        local (const (Map.insert name arg env)) (eval5 body)
+      _ -> throwError "type error in application"
 
 newtype Eval6 a = Eval6 {runEval6 :: ReaderT Env (ExceptT Text (WriterT [Text] (StateT Int IO))) a}
-    deriving newtype (Functor, Applicative, Monad, MonadReader Env, MonadError Text, MonadWriter [Text], MonadState Int, MonadIO)
+  deriving newtype (Functor, Applicative, Monad, MonadReader Env, MonadError Text, MonadWriter [Text], MonadState Int, MonadIO)
 
 runEval6' :: Env -> Int -> Eval6 Value -> IO ((Either Text Value, [Text]), Int)
 runEval6' env st = (`runStateT` st) . runWriterT . runExceptT . (`runReaderT` env) . runEval6
 
 eval6 :: Expr -> Eval6 Value
 eval6 = \case
-    Literal i -> do
-        tick
-        liftIO $ print i
-        pure (IntegerV i)
-    Variable name -> do
-        tick
-        tell [name]
-        env <- ask
-        case Map.lookup name env of
-            Nothing -> throwError ("variable not found: " <> name)
-            Just value -> pure value
-    Plus e1 e2 -> do
-        tick
-        e1' <- eval6 e1
-        e2' <- eval6 e2
-        case (e1', e2') of
-            (IntegerV i1, IntegerV i2) -> do
-                pure (IntegerV (i1 + i2))
-            _ -> throwError "type error in plus"
-    Abstraction name body -> do
-        tick
-        asks (\env -> FunctionV env name body)
-    Application e1 e2  -> do
-        tick
-        e1' <- eval6 e1
-        arg <- eval6 e2
-        case e1' of
-            FunctionV env name body ->
-                local (const (Map.insert name arg env)) (eval6 body)
-            _ -> throwError "type error in application"
+  Literal i -> do
+    tick
+    liftIO $ print i
+    pure (IntegerV i)
+  Variable name -> do
+    tick
+    tell [name]
+    env <- ask
+    case Map.lookup name env of
+      Nothing -> throwError ("variable not found: " <> name)
+      Just value -> pure value
+  Plus e1 e2 -> do
+    tick
+    e1' <- eval6 e1
+    e2' <- eval6 e2
+    case (e1', e2') of
+      (IntegerV i1, IntegerV i2) -> do
+        pure (IntegerV (i1 + i2))
+      _ -> throwError "type error in plus"
+  Abstraction name body -> do
+    tick
+    asks (\env -> FunctionV env name body)
+  Application e1 e2 -> do
+    tick
+    e1' <- eval6 e1
+    arg <- eval6 e2
+    case e1' of
+      FunctionV env name body ->
+        local (const (Map.insert name arg env)) (eval6 body)
+      _ -> throwError "type error in application"

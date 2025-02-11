@@ -1,19 +1,19 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module ReaderTrick.Extended where
 
-import Data.Monoid
-import Data.Foldable
 import Control.Monad.Reader
-import Data.Text (Text)
-import qualified Data.Text as Text
-import Data.Map ((!))
-import qualified Data.Map as Map
+import Data.Foldable
 import Data.Functor.Foldable
 import Data.Functor.Foldable.TH
+import Data.Map ((!))
+import Data.Map qualified as Map
+import Data.Monoid
+import Data.Text (Text)
+import Data.Text qualified as Text
 
 newtype Identifier = Identifier Text
   deriving (Eq, Ord, Show)
@@ -57,13 +57,16 @@ executeBlock stmts lastExpr =
   appEndo (foldMap execute stmts) (evaluate lastExpr)
 
 execute :: Stmt -> Endo (EvalM a)
-execute stmt = Endo (\rest -> case stmt of
-  Define identifier expr -> do
-    value <- evaluate expr
-    local (Map.insert identifier value) rest
-  Expr expr -> do
-    _ <- evaluate expr
-    rest)
+execute stmt =
+  Endo
+    ( \rest -> case stmt of
+        Define identifier expr -> do
+          value <- evaluate expr
+          local (Map.insert identifier value) rest
+        Expr expr -> do
+          _ <- evaluate expr
+          rest
+    )
 
 -- executeBlock stmts' last = case stmts' of
 --   [] -> evaluate last

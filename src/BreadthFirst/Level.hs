@@ -12,7 +12,7 @@ breadth f root = head <$> go [root]
           if null children
             then pure (Empty <$ trees)
             else -- composeForTrees trees <$> values <*> go children
-              -- How to fuse multiple traversal?
+            -- How to fuse multiple traversal?
               composeChildren
                 <$> traverse
                   ( \case
@@ -61,5 +61,3 @@ composeChildren = go
 demo1 :: IO ()
 demo1 = do
   breadth print tree1 >>= print
-
-

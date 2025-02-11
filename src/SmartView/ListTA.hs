@@ -60,7 +60,7 @@ instance (MonadPlus m) => MonadPlus (ListT m) where
   mplus = (<|>)
 
 instance (Monad m) => MonadLogic (ListT m) where
-  msplit :: Monad m => ListT m a -> ListT m (Maybe (a, ListT m a))
+  msplit :: (Monad m) => ListT m a -> ListT m (Maybe (a, ListT m a))
   msplit x = lift (viewListT x)
 
 instance MonadTrans ListT where

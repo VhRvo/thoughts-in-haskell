@@ -4,10 +4,10 @@
 module GADTsInAction where
 
 import Data.Data (Proxy (..))
-import qualified Data.Kind as K
-import Data.Type.Equality
-import Data.Text (Text)
 import Data.Function (on)
+import Data.Kind qualified as K
+import Data.Text (Text)
+import Data.Type.Equality
 
 data Type :: K.Type -> K.Type where
   TInt :: Type Int
@@ -125,4 +125,3 @@ evalBop op = case op of
   Gt -> (>)
   And -> (&&)
   Or -> (||)
-

@@ -51,7 +51,7 @@ transform1 (Tip x) sorted flattened =
     x : flattened
   )
 transform1 (Fork left right) sorted flattened =
-    -- combine (transform1 left) (transform2 right)
+  -- combine (transform1 left) (transform2 right)
   --   ( replace (Fork left right) (take (size left + size right) sorted),
   --     drop (size left + size right) sorted,
   --     flatten (Fork left right) flattened
@@ -68,22 +68,24 @@ transform1 (Fork left right) sorted flattened =
   --     drop (size right) (drop (size left) sorted),
   --     flatten left (flatten right flattened)
   --   ) ==
-  let (left', sorted', flattened'') =
-        transform1 left sorted flattened'
-      -- = ( replace left (take (size left) sorted),
-      --   drop (size left) sorted,
-      --   flatten left flattened'
-      -- )
-      (right', sorted'', flattened') =
-        transform1 right sorted' flattened
-   in -- = ( replace right (take (size right) sorted'),
-      --   drop (size right) sorted',
-      --   flatten right flattened
-      -- )
-      ( Fork left' right',
-        sorted'', -- drop (size right) (drop (size left) sorted)
-        flattened'' -- flatten left (flatten right flattened)
-      )
+  let
+    (left', sorted', flattened'') =
+      transform1 left sorted flattened'
+    -- = ( replace left (take (size left) sorted),
+    --   drop (size left) sorted,
+    --   flatten left flattened'
+    -- )
+    (right', sorted'', flattened') =
+      transform1 right sorted' flattened
+   in
+    -- = ( replace right (take (size right) sorted'),
+    --   drop (size right) sorted',
+    --   flatten right flattened
+    -- )
+    ( Fork left' right',
+      sorted'', -- drop (size right) (drop (size left) sorted)
+      flattened'' -- flatten left (flatten right flattened)
+    )
 
 -- combine (left', sorted', flattened'') (right', sorted'', flattened') =
 --   (Fork left', right', sorted'', flattened'')

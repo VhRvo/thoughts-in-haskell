@@ -5,10 +5,10 @@ module Concurrency.Msg where
 
 import Concurrency.Class
 import Control.Monad.State (MonadState (..))
-import qualified Control.Monad.State.Strict as S
+import Control.Monad.State.Strict qualified as S
 import Control.Monad.Trans (MonadTrans (..))
-import qualified Data.IORef as IO
-import qualified Data.Map.Strict as Map
+import Data.IORef qualified as IO
+import Data.Map.Strict qualified as Map
 
 data Msg
   = Add
@@ -86,4 +86,3 @@ instance (Monad m) => MsgMonad Int (S.StateT Store m) where
           Nothing -> pure Nothing
       Nothing ->
         pure Nothing
-

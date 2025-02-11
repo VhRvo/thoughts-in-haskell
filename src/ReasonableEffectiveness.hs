@@ -157,7 +157,7 @@ tell :: (Monoid w) => w -> Writer w ()
 tell w =
   Cont (\k -> let (w0, r) = k () in (w0 <> w, r))
 
-runWriter :: Monoid w => Writer w a -> (w, a)
+runWriter :: (Monoid w) => Writer w a -> (w, a)
 runWriter (Cont m) = m (\a -> (mempty, a))
 
 -- forall r. (a -> (s, r)) -> (s, r)
@@ -175,7 +175,6 @@ runRState (Cont m) s = m (\a -> (s, a))
 -- forall r. (a -> fw -> (bw, r)) -> fw -> (bw, r)
 type Tradis bw fw a = forall r. Cont (fw -> (bw, r)) a
 
-
 -- forall r. (a -> [r]) -> [r]
 type List a = forall r. Cont [r] a
 
@@ -189,15 +188,18 @@ runList :: List a -> [a]
 runList (Cont m) = m pure
 
 type List1 a = forall r. Cont (NonEmpty r) a
-type List' a = forall r. Monoid r => Cont r a
-type List1' a = forall r. Semigroup r => Cont r a
+
+type List' a = forall r. (Monoid r) => Cont r a
+
+type List1' a = forall r. (Semigroup r) => Cont r a
+
 -- type Tree0 a = forall r. Cont (Tree r) a
 
 -- (a -> m r) -> m r
 type ContT r m a = Cont (m r) a
 
 -- lift :: Monad m => m a -> (a -> m r) -> m r
-lift :: Monad m => m a -> ContT r m a
+lift :: (Monad m) => m a -> ContT r m a
 lift mx = Cont (\k -> mx >>= (\x -> k x))
 
 -- forall r. (a -> m r) -> m r
@@ -206,13 +208,13 @@ type CodensityT m a = forall r. Cont (m r) a
 -- (a -> m ()) -> m ()
 type ListT m a = Cont (m ()) a
 
-decideM :: Applicative m => ListT m Bool
+decideM :: (Applicative m) => ListT m Bool
 decideM = Cont (\k -> k True *> k False)
 
-vanishM :: Applicative m => ListT m a
+vanishM :: (Applicative m) => ListT m a
 vanishM = Cont (\_ -> pure ())
 
-runListT :: Applicative m => (a -> m ()) -> ListT m a -> m ()
+runListT :: (Applicative m) => (a -> m ()) -> ListT m a -> m ()
 runListT k (Cont m) = m k
 
 -- All 3 bit patterns
@@ -236,18 +238,15 @@ threeBit' = runListT printDigits $ do
   pure [i, j, k]
 
 eightBit :: IO ()
-eightBit = runListT printDigits $
-  replicateM 8 (Cont (for_ [0, 1]))
+eightBit =
+  runListT printDigits $
+    replicateM 8 (Cont (for_ [0, 1]))
 
 -- show only the suffix that changed at every step
 eightBit' :: IO ()
 eightBit' = runListT pure $ do
-  for_ [0..7] $ \n -> do
+  for_ [0 .. 7] $ \n -> do
     i <- Cont $ for_ [0, 1]
     lift $ when (i == 1) $ putStr (replicate n ' ')
     lift $ putStr (show @Int i)
   lift $ putStrLn ""
-
-
-
-

@@ -1,13 +1,13 @@
 module CpsInterpreter.Cont where
 
 import Control.Monad.Base
+import Control.Monad.Cont (Cont, MonadCont (..), runCont)
 import Control.Monad.Except (ExceptT, MonadError (..), runExceptT)
 import Control.Monad.IO.Class
-import Control.Monad.Cont (Cont, runCont, MonadCont (..))
 import Control.Monad.Reader (MonadReader (..), ReaderT, runReaderT)
-import qualified Control.Monad.Reader as Reader
+import Control.Monad.Reader qualified as Reader
 import Data.Sequence (Seq, (<|))
-import qualified Data.Sequence as Seq
+import Data.Sequence qualified as Seq
 import Data.Text (Text)
 import Text.Pretty.Simple (pPrint)
 

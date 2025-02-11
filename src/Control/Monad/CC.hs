@@ -1,7 +1,13 @@
-{-# LANGUAGE Rank2Types, GeneralizedNewtypeDeriving, MultiParamTypeClasses,
-    UndecidableInstances, FunctionalDependencies, FlexibleInstances, GADTs #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 --------------------------------------------------------------------------
+
 -- |
 -- Module      : Control.Monad.CC
 -- Copyright   : (c) R. Kent Dybvig, Simon L. Peyton Jones and Amr Sabry
@@ -21,44 +27,47 @@
 --
 -- This module implements the delimited continuation monad and transformer,
 -- using the sequence-of-frames implementation from the original paper.
-module Control.Monad.CC (
-        -- * The CC monad
-        CC(),
-        runCC,
-        -- * The CCT monad transformer
-        CCT(),
-        runCCT,
-        SubCont(),
-        Prompt,
-        MonadDelimitedCont(..),
-        -- * Assorted useful control operators
-        reset,
-        shift,
-        control,
-        shift0,
-        control0,
-        abort
-        -- * Examples
-        -- $Examples
-    ) where
+module Control.Monad.CC
+  ( -- * The CC monad
+    CC (),
+    runCC,
+
+    -- * The CCT monad transformer
+    CCT (),
+    runCCT,
+    SubCont (),
+    Prompt,
+    MonadDelimitedCont (..),
+
+    -- * Assorted useful control operators
+    reset,
+    shift,
+    control,
+    shift0,
+    control0,
+    abort,
+
+    -- * Examples
+    -- $Examples
+  )
+where
 
 import Control.Applicative
-
+import Control.Monad (ap)
+import Control.Monad.CC.Prompt
+import Control.Monad.CC.Seq
 import Control.Monad.Identity
-import Control.Monad.State
 import Control.Monad.Reader
+import Control.Monad.State
 import Control.Monad.Trans
 
-import Control.Monad.CC.Seq
-import Control.Monad.CC.Prompt
-
-import Control.Monad (ap)
-
 -- newtype Frame m ans a b = Frame (a -> CCT ans m b)
-data Frame m ans a b = FFrame (a -> b)
-                     | MFrame (a -> CCT ans m b)
+data Frame m ans a b
+  = FFrame (a -> b)
+  | MFrame (a -> CCT ans m b)
 
 type Cont ans m a = Seq (Frame m) ans a
+
 newtype SubCont ans m a b = SC (SubSeq (Frame m) ans a b)
 
 -- | The CCT monad transformer allows you to layer delimited control
@@ -74,63 +83,67 @@ newtype SubCont ans m a b = SC (SubSeq (Frame m) ans a b)
 -- * a   : The contained value. A value of type CCT ans m a can be though
 --         of as a computation that calls its continuation with a value of
 --         type 'a'
-newtype CCT ans m a = CCT { unCCT :: Cont ans m a -> P ans m ans }
+newtype CCT ans m a = CCT {unCCT :: Cont ans m a -> P ans m ans}
 
 instance (Monad m) => Functor (CCT ans m) where
-    fmap f (CCT e) = CCT $ \k -> e (PushSeg (FFrame f) k)
+  fmap f (CCT e) = CCT $ \k -> e (PushSeg (FFrame f) k)
 
 instance (Monad m) => Applicative (CCT ans m) where
-    pure :: Monad m => a -> CCT ans m a
-    pure v = CCT $ \k -> appk k v
-    (<*>) :: Monad m => CCT ans m (a -> b) -> CCT ans m a -> CCT ans m b
-    (<*>) = ap
+  pure :: (Monad m) => a -> CCT ans m a
+  pure v = CCT $ \k -> appk k v
+  (<*>) :: (Monad m) => CCT ans m (a -> b) -> CCT ans m a -> CCT ans m b
+  (<*>) = ap
 
 instance (Monad m) => Monad (CCT ans m) where
-    return :: Monad m => a -> CCT ans m a
-    return = pure
-    (>>=) :: Monad m => CCT ans m a -> (a -> CCT ans m b) -> CCT ans m b
-    (CCT e1) >>= e2 = CCT $ \k -> e1 (PushSeg (MFrame e2) k)
+  return :: (Monad m) => a -> CCT ans m a
+  return = pure
+  (>>=) :: (Monad m) => CCT ans m a -> (a -> CCT ans m b) -> CCT ans m b
+  (CCT e1) >>= e2 = CCT $ \k -> e1 (PushSeg (MFrame e2) k)
 
 instance MonadTrans (CCT ans) where
-    lift :: Monad m => m a -> CCT ans m a
-    lift m = CCT $ \k -> lift m >>= appk k
+  lift :: (Monad m) => m a -> CCT ans m a
+  lift m = CCT $ \k -> lift m >>= appk k
 
 instance (MonadReader r m) => MonadReader r (CCT ans m) where
-    ask :: MonadReader r m => CCT ans m r
-    ask = lift ask
-    local :: MonadReader r m => (r -> r) -> CCT ans m a -> CCT ans m a
-    local f m = CCT $ \k -> local f (unCCT m k)
+  ask :: (MonadReader r m) => CCT ans m r
+  ask = lift ask
+  local :: (MonadReader r m) => (r -> r) -> CCT ans m a -> CCT ans m a
+  local f m = CCT $ \k -> local f (unCCT m k)
 
 instance (MonadState s m) => MonadState s (CCT ans m) where
-    get :: MonadState s m => CCT ans m s
-    get = lift get
-    put :: MonadState s m => s -> CCT ans m ()
-    put = lift . put
+  get :: (MonadState s m) => CCT ans m s
+  get = lift get
+  put :: (MonadState s m) => s -> CCT ans m ()
+  put = lift . put
 
 instance (MonadIO m) => MonadIO (CCT ans m) where
-    liftIO :: MonadIO m => IO a -> CCT ans m a
-    liftIO = lift . liftIO
+  liftIO :: (MonadIO m) => IO a -> CCT ans m a
+  liftIO = lift . liftIO
 
 -- Applies a continuation to a value.
-appk :: Monad m => Cont ans m a -> a -> P ans m ans
-appk EmptyS        a = return a
-appk (PushP _ k)   a = appk k a
+appk :: (Monad m) => Cont ans m a -> a -> P ans m ans
+appk EmptyS a = return a
+appk (PushP _ k) a = appk k a
 appk (PushSeg f k) a = appFrame f a k
- where
- appFrame (MFrame g) b l = unCCT (g b) l
- appFrame (FFrame g) b l = appk l (g b)
+  where
+    appFrame (MFrame g) b l = unCCT (g b) l
+    appFrame (FFrame g) b l = appk l (g b)
 
 -- | Executes a CCT computation, yielding a value in the underlying monad
 runCCT :: (Monad m) => (forall ans. CCT ans m a) -> m a
 runCCT c = runP (unCCT c EmptyS)
 
 -- | The CC monad may be used to execute computations with delimited control.
-newtype CC ans a = CC { unCC :: CCT ans Identity a }
-    deriving (Functor, Monad, Applicative,
-                MonadDelimitedCont (Prompt ans) (SubCont ans Identity))
+newtype CC ans a = CC {unCC :: CCT ans Identity a}
+  deriving
+    ( Functor,
+      Monad,
+      Applicative,
+      MonadDelimitedCont (Prompt ans) (SubCont ans Identity)
+    )
 
 -- | Executes a CC computation, yielding a resulting value.
-runCC  :: (forall ans. CC ans a) -> a
+runCC :: (forall ans. CC ans a) -> a
 runCC c = runIdentity (runCCT (unCC c))
 
 -- | A typeclass for monads that support delimited control operators.
@@ -142,27 +155,31 @@ runCC c = runIdentity (runCCT (unCC c))
 --
 -- s : The associated type of sub-continuations that may be captured
 class (Monad m) => MonadDelimitedCont p s m | m -> p s where
-    -- | Creates a new, unique prompt.
-    newPrompt   :: m (p a)
-    -- | Delimits a computation with a given prompt.
-    pushPrompt  :: p a -> m a -> m a
-    -- | Abortively capture the sub-continuation delimited by the given
-    -- prompt, and call the given function with it. The prompt does not appear
-    -- delimiting the sub-continuation, nor the resulting computation.
-    withSubCont :: p b -> (s a b -> m b) -> m a
-    -- | Pushes a sub-continuation, reinstating it as part of the continuation.
-    pushSubCont :: s a b -> m a -> m b
+  -- | Creates a new, unique prompt.
+  newPrompt :: m (p a)
+
+  -- | Delimits a computation with a given prompt.
+  pushPrompt :: p a -> m a -> m a
+
+  -- | Abortively capture the sub-continuation delimited by the given
+  -- prompt, and call the given function with it. The prompt does not appear
+  -- delimiting the sub-continuation, nor the resulting computation.
+  withSubCont :: p b -> (s a b -> m b) -> m a
+
+  -- | Pushes a sub-continuation, reinstating it as part of the continuation.
+  pushSubCont :: s a b -> m a -> m b
 
 instance (Monad m) => MonadDelimitedCont (Prompt ans) (SubCont ans m) (CCT ans m) where
-    newPrompt :: Monad m => CCT ans m (Prompt ans a)
-    newPrompt = CCT $ \k -> newPromptName >>= appk k
-    pushPrompt :: Monad m => Prompt ans a -> CCT ans m a -> CCT ans m a
-    pushPrompt p (CCT e) = CCT $ \k -> e (PushP p k)
-    withSubCont :: Monad m => Prompt ans b -> (SubCont ans m a b -> CCT ans m b) -> CCT ans m a
-    withSubCont p f = CCT $ \k -> let (subk, k') = splitSeq p k
-                                   in unCCT (f (SC subk)) k'
-    pushSubCont :: Monad m => SubCont ans m a b -> CCT ans m a -> CCT ans m b
-    pushSubCont (SC subk) (CCT e) = CCT $ \k -> e (pushSeq subk k)
+  newPrompt :: (Monad m) => CCT ans m (Prompt ans a)
+  newPrompt = CCT $ \k -> newPromptName >>= appk k
+  pushPrompt :: (Monad m) => Prompt ans a -> CCT ans m a -> CCT ans m a
+  pushPrompt p (CCT e) = CCT $ \k -> e (PushP p k)
+  withSubCont :: (Monad m) => Prompt ans b -> (SubCont ans m a b -> CCT ans m b) -> CCT ans m a
+  withSubCont p f = CCT $ \k ->
+    let (subk, k') = splitSeq p k
+     in unCCT (f (SC subk)) k'
+  pushSubCont :: (Monad m) => SubCont ans m a b -> CCT ans m a -> CCT ans m b
+  pushSubCont (SC subk) (CCT e) = CCT $ \k -> e (pushSeq subk k)
 
 -- | An approximation of the traditional /reset/ operator. Creates a new prompt,
 -- calls the given function with it, and delimits the resulting computation
@@ -201,15 +218,17 @@ reset e = newPrompt >>= \p -> pushPrompt p (e p)
 -- subcontinuation into a function, keeping both the subcontinuation, and
 -- the resulting computation delimited by the given prompt.
 shift :: (MonadDelimitedCont p s m) => p b -> ((m a -> m b) -> m b) -> m a
-shift p f = withSubCont p $ \sk -> pushPrompt p $
-                                f (\a -> pushPrompt p $ pushSubCont sk a)
+shift p f = withSubCont p $ \sk ->
+  pushPrompt p $
+    f (\a -> pushPrompt p $ pushSubCont sk a)
 
 -- | The /control/ operator, traditionally the counterpart of /prompt/. It does
 -- not delimit the reified subcontinuation, so control effects therein can
 -- escape. The corresponding prompt is performed equally well by 'reset' above.
 control :: (MonadDelimitedCont p s m) => p b -> ((m a -> m b) -> m b) -> m a
-control p f = withSubCont p $ \sk -> pushPrompt p $
-                                f (\a -> pushSubCont sk a)
+control p f = withSubCont p $ \sk ->
+  pushPrompt p $
+    f (\a -> pushSubCont sk a)
 
 -- | Abortively captures the current subcontinuation, delimiting it in a reified
 -- function. The resulting computation, however, is undelimited.
@@ -226,6 +245,7 @@ abort :: (MonadDelimitedCont p s m) => p b -> m b -> m a
 abort p e = withSubCont p (\_ -> e)
 
 -------------------------------------------------------------------------------
+
 -- $Examples
 --
 -- This module provides many different control operators, so hopefully the

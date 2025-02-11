@@ -1,9 +1,9 @@
 module ClassicalLand where
 
 import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Prelude hiding (False, not, (^))
-import qualified Prelude as P
+import Prelude qualified as P
 
 data Proposition
   = Proposition :-> Proposition
@@ -101,16 +101,18 @@ elim (Axiom n p) m@(ModusPones q r) =
       let s = consequence m
        in a (s :-> p :-> s) @@ m
     else
-      let q' = elim (Axiom n p) q
-          r' = elim (Axiom n p) r
-          tj = consequence r
-          ti = target (consequence q)
-       in b
-            ( (p :-> (tj :-> ti))
-                :-> ((p :-> tj) :-> (p :-> ti))
-            )
-            @@ q'
-            @@ r'
+      let
+        q' = elim (Axiom n p) q
+        r' = elim (Axiom n p) r
+        tj = consequence r
+        ti = target (consequence q)
+       in
+        b
+          ( (p :-> (tj :-> ti))
+              :-> ((p :-> tj) :-> (p :-> ti))
+          )
+          @@ q'
+          @@ r'
 
 magic :: Proposition -> Proof
 magic (False :-> q) = elim u1 $ c1 @@ (a1 @@ u1)

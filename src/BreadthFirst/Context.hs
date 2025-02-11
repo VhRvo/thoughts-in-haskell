@@ -2,11 +2,11 @@
 
 module BreadthFirst.Context where
 
+import BreadthFirst.Tree
 import Data.IORef (modifyIORef, newIORef, readIORef)
 import Data.List (unsnoc)
 import Data.Maybe (fromMaybe)
 import Prelude hiding (sequence, tail)
-import BreadthFirst.Tree
 
 breadth' :: forall m a. (Applicative m) => (a -> m ()) -> Tree a -> m ()
 breadth' f root = go [root]

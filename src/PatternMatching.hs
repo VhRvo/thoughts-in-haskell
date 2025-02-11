@@ -33,9 +33,9 @@ two x y _ _ f = f x y
 
 fun :: Foobar -> Int
 fun = \case
-    Zero -> 0
-    One a -> a + 1
-    Two a b -> a + b + 2
+  Zero -> 0
+  One a -> a + 1
+  Two a b -> a + b + 2
 
 funCPS :: FoobarCPS Int -> Int
-funCPS x = x 0 (+1) (\a b -> a + b + 2)
+funCPS x = x 0 (+ 1) (\a b -> a + b + 2)

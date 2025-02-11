@@ -1,8 +1,8 @@
 module InvariantInCPS.Normal where
 
-import Data.Text (Text)
-import Data.Map (Map, (!?))
 import Control.Monad.Reader
+import Data.Map (Map, (!?))
+import Data.Text (Text)
 
 newtype Identifier = Identifier Text
   deriving (Eq, Ord, Show)
@@ -16,8 +16,8 @@ data Expr
   deriving (Eq, Ord, Show)
 
 data Value
-    = VariableV Identifier
-    | Closure Env Identifier Expr
+  = VariableV Identifier
+  | Closure Env Identifier Expr
   deriving (Eq, Ord, Show)
 
 {-

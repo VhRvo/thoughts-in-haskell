@@ -6,13 +6,20 @@ import Control.Monad.State.Strict
 import Control.Monad.Writer.Strict (MonadWriter (..), WriterT, execWriterT, tell)
 import Data.Foldable (traverse_)
 import Data.Map (Map)
-import qualified Data.Map as M
+import Data.Map qualified as M
 import Data.Text (Text)
-
 -- import Text.ParserCombinators.UU (pChainl)
 -- import Text.ParserCombinators.UU.Utils
-import Text.PrettyPrint.Leijen ((<+>), (<>), hsep, vsep, int
-                               , text, punctuate, comma)
+import Text.PrettyPrint.Leijen
+  ( comma,
+    hsep,
+    int,
+    punctuate,
+    text,
+    vsep,
+    (<+>),
+    (<>),
+  )
 
 data Expr
   = Lit Int
@@ -33,9 +40,9 @@ ppProg :: Program -> String
 ppProg = show . vsep . map ppInst
   where
     ppInst (IAdd r o1 o2) = text "IAdd" <+> ppOperands [Reg r, o1, o2]
-    ppOperands            = hsep . punctuate comma . map ppOpd
-    ppOpd (Immediate i)   = int i
-    ppOpd (Reg r)         = text "%" <> int r
+    ppOperands = hsep . punctuate comma . map ppOpd
+    ppOpd (Immediate i) = int i
+    ppOpd (Reg r) = text "%" <> int r
 
 data Instruction
   = IAdd Reg Operand Operand

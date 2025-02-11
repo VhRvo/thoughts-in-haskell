@@ -1,18 +1,18 @@
 module Bifunctor.Demo where
 
 import Bifunctor.Class hiding (step)
+import Data.Foldable qualified as DF
 import Data.Text (Text)
-import qualified Data.Foldable as DF
-
 import Prelude hiding (map)
 
 type Doc = Fix DocF Text
+
 data DocF a b = Para a | Section Text [b]
 
 instance Bifunctor DocF where
-    bimap f g = \case
-      Para s -> Para (f s)
-      Section s xs -> Section s (g <$> xs)
+  bimap f g = \case
+    Para s -> Para (f s)
+    Section s xs -> Section s (g <$> xs)
 
 correct :: Text -> Text
 correct = undefined
@@ -33,6 +33,7 @@ data XML
   | Entity Tag Attributes [XML]
 
 type Tag = Text
+
 type Attributes = [(Text, Text)]
 
 fromXML :: XML -> Doc
@@ -49,7 +50,7 @@ title tag = \case
   kv : kvs -> tag <> paren (join (attr kv) (attr <$> kvs))
   where
     join tag [] = tag
-    join tag (s:ss) = tag <> ", " <> join s ss
+    join tag (s : ss) = tag <> ", " <> join s ss
     attr (key, value) = key <> "='" <> value <> "'"
     paren s = " (" <> s <> ")"
 
@@ -64,8 +65,3 @@ myDoc = build buildDoc
 
 printMyDoc :: [Text]
 printMyDoc = buildDoc combine
-
-
-
-
-

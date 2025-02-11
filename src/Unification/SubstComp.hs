@@ -1,12 +1,14 @@
 module Unification.SubstComp where
 
+import Data.Map (Map)
+import Data.Map qualified as Map
 import Data.Maybe
 import Data.Text (Text)
-import Data.Map (Map)
-import qualified Data.Map as Map
 
 type Symbol = Text
+
 data Term = Variable Symbol | Predicate Symbol [Term]
+
 type Substitution = Map Symbol Term
 
 subst :: Substitution -> Term -> Term

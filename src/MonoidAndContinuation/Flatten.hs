@@ -1,8 +1,8 @@
 module MonoidAndContinuation.Flatten where
 
-import Test.QuickCheck
 import GHC.Generics
 import Generic.Random
+import Test.QuickCheck
 import Text.Pretty.Simple
 
 data Tree a
@@ -11,18 +11,19 @@ data Tree a
   deriving (Eq, Show, Generic)
 
 instance (Arbitrary a) => Arbitrary (Tree a) where
-    arbitrary = genericArbitrary (7 % 6 % ())
+  arbitrary = genericArbitrary (7 % 6 % ())
+
 --   deriving Arbitrary via GenericArbitrary '[6, 7] (Tree a)
 
 flatten :: Tree a -> [a]
 flatten = \case
-    Tip x -> [x]
-    Binary left right -> flatten left <> flatten right
+  Tip x -> [x]
+  Binary left right -> flatten left <> flatten right
 
 flatten1 :: Tree a -> ([a] -> [a])
 flatten1 = \case
-    Tip x -> ([x] <>)
-    Binary left right -> flatten1 left . flatten1 right
+  Tip x -> ([x] <>)
+  Binary left right -> flatten1 left . flatten1 right
 
 extensionalEqualityProp1 :: (Eq a) => Tree a -> Bool
 extensionalEqualityProp1 tree = flatten tree == flatten1 tree []
@@ -35,25 +36,25 @@ extensionalEqualityProp3 tree = flatten tree == flatten3 tree [] []
 
 flatten2 :: Tree a -> [a] -> [Tree a] -> [a]
 flatten2 tree xs k = case tree of
-    Tip x -> abs k (x : xs)
-    Binary t u -> flatten2 u xs (t : k)
+  Tip x -> abs k (x : xs)
+  Binary t u -> flatten2 u xs (t : k)
   where
     abs [] xs = xs
-    abs (t:k) xs = flatten2 t xs k
+    abs (t : k) xs = flatten2 t xs k
 
 flatten3 :: Tree a -> [a] -> [Tree a] -> [a]
 flatten3 tree xs k = case (tree, k) of
-    (Tip x, []) -> x : xs
-    (Tip x, t:k') -> flatten3 t (x: xs) k'
-    (Binary t u, _) -> flatten3 u xs (t : k)
-
+  (Tip x, []) -> x : xs
+  (Tip x, t : k') -> flatten3 t (x : xs) k'
+  (Binary t u, _) -> flatten3 u xs (t : k)
 
 demo :: IO ()
 demo = do
-    -- generate (arbitrary @(Tree Int)) >>= pPrint
-    quickCheck (extensionalEqualityProp1 @Int)
-    quickCheck (extensionalEqualityProp2 @Int)
-    quickCheck (extensionalEqualityProp3 @Int)
+  -- generate (arbitrary @(Tree Int)) >>= pPrint
+  quickCheck (extensionalEqualityProp1 @Int)
+  quickCheck (extensionalEqualityProp2 @Int)
+  quickCheck (extensionalEqualityProp3 @Int)
+
 {-
 ret n                             :: (Int -> Int) -> Int
 sub                               :: (Int -> Int) -> Int -> Int -> Int
@@ -172,7 +173,6 @@ b0 (ret 4) (b1 (ret 3) (b2 (ret 2) (b3 (ret 1) (b4 (ret 1) (b3 sub (b2 sub (b1 s
   : Int
   ~ Arrow [] (Arrow [] Int)
 
-
   compile `4 - (3 - (2 - (1 - 1)))`
 = [PushI 4] ++ compile `3 - (2 - (1 - 1))` ++ [SubI]
              = [PushI 3] ++ compile `2 - (1 - 1)` ++ [SubI]
@@ -282,7 +282,6 @@ b^r+s h (b^r g f) :: Arrow (ar ++ bs) c3
                                  ~ b^r (_ : c1 -> c2) (_ : Arrow ar c1)
                ~ b^s (_ : c2 -> c3) (_ : Arrow bs c2)
 
-
 Arrow (as ++ [a]) b = Arrow as (a -> b)
   Arrow (as ++ [a]) b
 = Arrow as (Arrow [a] b) -- lemma
@@ -346,7 +345,6 @@ cs == [Int, Int]
 = flip4 . flip 2 . f . flip1 . flip 3 . flip3 . flip2 . f . flip2 . f . $ halt
 = flip4 . flip 2 . f .   id  .        id      . flip2 . f . flip2 . f . $ halt
 = flip4 . flip 2 . f . flip2 . f . flip2 . f . $ flip1 halt
-
 
 sub :: Arrow [Int] z -> Arrow [Int, Int] z
 as == [Int]

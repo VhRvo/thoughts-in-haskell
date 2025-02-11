@@ -1,4 +1,5 @@
 {-# LANGUAGE BangPatterns #-}
+
 module LazyStrictState where
 
 import Control.Monad.State.Lazy as Lazy

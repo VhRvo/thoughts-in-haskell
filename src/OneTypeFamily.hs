@@ -3,7 +3,7 @@
 
 module OneTypeFamily where
 
-import Data.Kind (Type, Constraint)
+import Data.Kind (Constraint, Type)
 import GHC.TypeLits (ErrorMessage (..), TypeError)
 import GHC.TypeNats (Nat, type (+))
 
@@ -18,6 +18,7 @@ type Expr a = a -> Type
 type family Bar (x :: Type -> Type) (y :: Type -> Type -> Type) :: (Type -> Type) -> Constraint where
   Bar Maybe Either = Functor
   Bar [] (->) = Applicative
+
 -- data Expr a :: Type
 
 type family Eval (e :: Expr a) :: a
@@ -74,29 +75,33 @@ type instance Eval (Map f (x ': xs)) = Eval (f x) : Eval (Map f xs)
 
 type (>>=) :: forall (a :: Type) (b :: Type). Expr a -> (a -> Expr b) -> Expr b
 data (>>=) mx f :: Expr b
+
 type instance Eval (mx >>= f) = Eval (f (Eval mx))
 
 type Pure :: forall (a :: Type). a -> Expr a
 data Pure x :: Expr a
+
 type instance Eval (Pure x) = x
 
 type (>=>) :: forall (a :: Type) (b :: Type) (c :: Type). (a -> Expr b) -> (b -> Expr c) -> a -> Expr c
 data (>=>) f g x :: Expr c
+
 type instance Eval ((>=>) f g x) = Eval (g (Eval (f x)))
 
 type (<$>) :: forall (a :: Type) (b :: Type). (a -> b) -> Expr a -> Expr b
 data (<$>) f mx :: Expr b
+
 type instance Eval (f <$> mx) = f (Eval mx)
 
 type (<*>) :: forall (a :: Type) (b :: Type). Expr (a -> b) -> Expr a -> Expr b
 data (<*>) mf mx :: Expr b
+
 type instance Eval (mf <*> mx) = (Eval mf) (Eval mx)
 
 type Join :: Expr (Expr a) -> Expr a
 data Join mmx :: Expr a
+
 type instance Eval (Join mmx) = Eval (Eval mmx)
-
-
 
 type Free :: (Type -> Type) -> Type -> Type
 data Free f a = Pure a | Free (f (Free f a))
@@ -115,8 +120,9 @@ data SBool bool where
 
 type If :: forall (k :: Type). Bool -> k -> k -> k
 type family If b true false where
-    If 'True true _ = true
-    If 'False _ false = false
+  If 'True true _ = true
+  If 'False _ false = false
+
 -- type family If b true false :: k
 -- type instance If 'True true _ = true
 -- type instance If 'False _ false = false
@@ -131,6 +137,7 @@ type instance Eval (TypeError' error) = TypeError error
 type Z = Eval (If @(Expr Nat) 'True (Pure 2) (TypeError' ('Text "This shouldn't happen")))
 
 type a ~> b = a -> b -> Type
+
 type Apply :: forall (a :: Type) (b :: Type). a ~> b -> a -> b
 -- type family Apply (f :: a ~> b) (x :: a) :: b
 type family Apply f x :: b
@@ -139,6 +146,7 @@ type family Apply f x :: b
 -- type family Eval_ f :: a
 -- type instance Eval_ f = Apply f '()
 type Expr_ a = () ~> a
+
 type Eval_ (e :: Expr_ a) = Apply e '()
 
 -- a ~> b => a -> b -> Type => a -> Expr b
@@ -156,6 +164,7 @@ type Apply_ (f :: a -> Expr b) (x :: a) = Eval (f x)
 -- type TYFUN = Type -> Type -> Type
 type TYFUN :: Type -> Type -> Type
 data TYFUN :: Type -> Type -> Type
+
 type TyFun a b = TYFUN a b -> Type
 
 type Maybe' :: Expr Type

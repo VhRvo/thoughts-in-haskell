@@ -1,24 +1,24 @@
 module CPS.Normal2 where
 
-import Data.Text (Text)
 import Data.Map (Map, (!?))
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Data.Maybe (fromJust)
+import Data.Text (Text)
 import Prelude as P
 
 newtype Identifier = Identifier Text
-    deriving (Eq, Ord, Show)
+  deriving (Eq, Ord, Show)
 
 data Expr
-    = Constant Int
-    | Add Expr Expr
-    | Variable Identifier
-    | Lambda Identifier Expr
-    | Application Expr Expr
+  = Constant Int
+  | Add Expr Expr
+  | Variable Identifier
+  | Lambda Identifier Expr
+  | Application Expr Expr
 
 data Value
-    = Integer Int
-    | Closure (Value -> (Value -> Value) -> Value)
+  = Integer Int
+  | Closure (Value -> (Value -> Value) -> Value)
 
 type Env = Map Identifier Value
 
@@ -41,11 +41,11 @@ apply _ _ = error "apply: invalid arguments"
 
 evalK :: Expr -> Env -> (Value -> Value) -> Value
 evalK expr env k = case expr of
-    Constant integer -> k (Integer integer)
-    Add left right -> evalK left env (\leftV -> evalK right env (\rightV -> add leftV rightV))
-    Variable id -> k (fromJust (env !? id))
-    Lambda id body -> k (Closure (\value k' -> evalK body (Map.insert id value env) k'))
-    Application e1 e2 -> evalK e1 env (\func -> evalK e2 env (\arg -> apply func arg k))
+  Constant integer -> k (Integer integer)
+  Add left right -> evalK left env (\leftV -> evalK right env (\rightV -> add leftV rightV))
+  Variable id -> k (fromJust (env !? id))
+  Lambda id body -> k (Closure (\value k' -> evalK body (Map.insert id value env) k'))
+  Application e1 e2 -> evalK e1 env (\func -> evalK e2 env (\arg -> apply func arg k))
 
 -- data ExprK
 --     = ConstantK Identifier Int
@@ -57,6 +57,5 @@ evalK expr env k = case expr of
 -- evalK' :: ExprK -> Env -> Value -> Value
 -- evalK' expr env closure = case expr of
 --     ConstantK k integer -> apply closure (Integer integer)
-    -- Add id left right -> add (evalK' left env) (evalK' right env)
-    -- Variable id1 id2 -> fromJust  (env  !? id1) `apply` evalK' id2 env
-
+-- Add id left right -> add (evalK' left env) (evalK' right env)
+-- Variable id1 id2 -> fromJust  (env  !? id1) `apply` evalK' id2 env

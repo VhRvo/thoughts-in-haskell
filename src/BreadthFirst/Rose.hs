@@ -13,10 +13,11 @@ data Tree a = Tree {root :: a, children :: [Tree a]}
 foldrTree :: (a -> r -> r) -> (r -> r -> r) -> r -> Tree a -> r
 foldrTree f g a (Tree root children) =
   f root (foldr (g . foldrTree f g a) a children)
-  -- f root (foldr g a . fmap (foldrTree f g a) $ children)
+
+-- f root (foldr g a . fmap (foldrTree f g a) $ children)
 
 class FoldTree f where
-    foldTree :: (a -> r -> r) -> (r -> r -> r) -> r -> f a -> r
+  foldTree :: (a -> r -> r) -> (r -> r -> r) -> r -> f a -> r
 
 instance FoldTree Tree where
   foldTree :: (a -> r -> r) -> (r -> r -> r) -> r -> Tree a -> r

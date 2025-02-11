@@ -15,5 +15,3 @@ traverse_ transform =
     ( foldMap @t @(Const (Ap f ()) ())
         (coerce @_ @(a -> Const (Ap f ()) ()) (void . transform))
     )
-
-

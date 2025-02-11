@@ -1,9 +1,9 @@
 module Unification.Simple where
 
-import Unification.Expr
 import Control.Monad.Reader
 import Data.Map (Map, (!?))
-import qualified Data.Map as Map
+import Data.Map qualified as Map
+import Unification.Expr
 
 type Context = Map Identifier Type
 

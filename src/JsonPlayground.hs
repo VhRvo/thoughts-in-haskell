@@ -1,5 +1,3 @@
-
-
 module JsonPlayground where
 
 import Data.Aeson
@@ -7,8 +5,8 @@ import Data.Aeson.Types
 
 (.->) :: (FromJSON a) => Parser Object -> Key -> Parser a
 (.->) parser key = do
-    obj <- parser
-    obj .: key
+  obj <- parser
+  obj .: key
 
 -- { contact_info: { email: <string> } }
 nested :: Value -> Parser String

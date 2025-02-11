@@ -2,37 +2,38 @@ module SAT.List where
 
 import Data.Bifunctor
 import Data.Map.Strict ((!?))
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 -- import Data.Text
-import System.IO.Unsafe
 
+import Debug.Trace
 import SAT.Formulae
+import System.IO.Unsafe
 import Test.Hspec.Expectations
 import Prelude hiding (fail, succ)
-import Debug.Trace
 
 satisfy :: BooleanFormula -> Env -> [(Bool, Env)]
 satisfy formula env =
- case formula of
-  Var var -> do
-    case env !? var of
-      Nothing ->
-        [ (True, Map.insert var True env),
-          (False, Map.insert var False env)
-        ]
-      Just stored -> [(stored, env)]
-  Not inner -> first not <$> satisfy inner env
-  And left right -> do
-    (result, env') <- satisfy left env
-    if result
-      then satisfy right env'
-      else pure (False, env')
-  Or left right -> do
-    (result, env') <- satisfy left env
-    if result
-      then pure (True, env')
-      else satisfy right env'
-      -- else satisfy right env
+  case formula of
+    Var var -> do
+      case env !? var of
+        Nothing ->
+          [ (True, Map.insert var True env),
+            (False, Map.insert var False env)
+          ]
+        Just stored -> [(stored, env)]
+    Not inner -> first not <$> satisfy inner env
+    And left right -> do
+      (result, env') <- satisfy left env
+      if result
+        then satisfy right env'
+        else pure (False, env')
+    Or left right -> do
+      (result, env') <- satisfy left env
+      if result
+        then pure (True, env')
+        else satisfy right env'
+
+-- else satisfy right env
 
 solve :: BooleanFormula -> Maybe Env
 solve formula =
@@ -52,4 +53,5 @@ main = do
   let solutions = solve' test5
   print solutions
   print (solve' test6)
-  -- print (solve' test5)
+
+-- print (solve' test5)

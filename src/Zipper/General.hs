@@ -43,8 +43,9 @@ location1 =
 
 from :: Location a -> Tree a
 from (Location focus' path') = from' focus' path'
--- from (Location (from' -> result)) = result
   where
+    -- from (Location (from' -> result)) = result
+
     from' :: Tree a -> Path a -> Tree a
     from' focus = \case
       Top -> focus
@@ -60,27 +61,28 @@ goLeft (Location focus path) = case path of
 
 goRight :: Location a -> Either Text (Location a)
 goRight (Location focus path) = case path of
-    Top -> Left "right of top"
-    Node left up (r:right) ->
-        pure $ Location r (Node (focus : left) up right)
-    _ -> Left "right of last"
+  Top -> Left "right of top"
+  Node left up (r : right) ->
+    pure $ Location r (Node (focus : left) up right)
+  _ -> Left "right of last"
 
 goUp :: Location a -> Either Text (Location a)
 goUp (Location focus path) = case path of
-    Top -> Left "up of top"
-    Node left up right -> pure $ Location (Section $ reverse left <> (focus : right)) up
+  Top -> Left "up of top"
+  Node left up right -> pure $ Location (Section $ reverse left <> (focus : right)) up
 
 goDown :: Location a -> Either Text (Location a)
 goDown (Location focus path) = case focus of
-    Item _ -> Left "down of item"
-    Section (first : rest) -> pure $ Location first (Node [] path rest)
-    _ -> Left "down of empty"
+  Item _ -> Left "down of item"
+  Section (first : rest) -> pure $ Location first (Node [] path rest)
+  _ -> Left "down of empty"
 
 nth :: Location a -> Int -> Either Text (Location a)
 nth location = \case
-    1 -> goDown location
-    n | n > 0 -> goRight location >>= (`nth`(n - 1))
-      | otherwise -> Left "nth expects a positive integer"
+  1 -> goDown location
+  n
+    | n > 0 -> goRight location >>= (`nth` (n - 1))
+    | otherwise -> Left "nth expects a positive integer"
 
 -- >>> from location1
 
@@ -91,27 +93,27 @@ change (Location _ path) tree = Location tree path
 -- Insertion to the left or to the right is natural and cheap
 insertRight :: Location a -> Tree a -> Either Text (Location a)
 insertRight (Location focus path) tree = case path of
-    Top -> Left "insert of top"
-    Node left up right -> pure $ Location focus (Node left up (tree : right))
+  Top -> Left "insert of top"
+  Node left up right -> pure $ Location focus (Node left up (tree : right))
 
 insertLeft :: Location a -> Tree a -> Either Text (Location a)
 insertLeft (Location focus path) tree = case path of
-    Top -> Left "insert of top"
-    Node left up right -> pure $ Location focus (Node (tree : left) up right)
+  Top -> Left "insert of top"
+  Node left up right -> pure $ Location focus (Node (tree : left) up right)
 
 insertDown :: Location a -> Tree a -> Either Text (Location a)
 insertDown (Location focus path) tree = case focus of
-    Item _ -> Left "down of item"
-    Section children -> pure $ Location tree (Node [] path children)
+  Item _ -> Left "down of item"
+  Section children -> pure $ Location tree (Node [] path children)
 
 -- We may choose to move right, if possible, otherwise left,
 -- and up in case of an empty list.
 delete :: Location a -> Either Text (Location a)
 delete (Location _ path) = case path of
-    Top -> Left "delete of top"
-    Node left up (r:right) -> pure $ Location r (Node left up right)
-    Node (l:left) up [] -> pure $ Location l (Node left up [])
-    Node [] up [] -> pure $ Location (Section []) up
+  Top -> Left "delete of top"
+  Node left up (r : right) -> pure $ Location r (Node left up right)
+  Node (l : left) up [] -> pure $ Location l (Node left up [])
+  Node [] up [] -> pure $ Location (Section []) up
 
 -- data MemoTree a
 --     = Item a

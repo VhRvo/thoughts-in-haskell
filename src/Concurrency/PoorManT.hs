@@ -7,16 +7,16 @@ module Concurrency.PoorManT where
 import Concurrency.Class
 import Concurrency.Msg
 import Control.Monad (ap, liftM, (>=>))
-import qualified Control.Monad.State as S
+import Control.Monad.State qualified as S
 import Control.Monad.State.Class
 import Control.Monad.Trans (MonadTrans (..))
 import Data.Foldable (toList)
 import Data.Function ((&))
-import qualified Data.IORef as IO
-import qualified Data.Map.Strict as Map
+import Data.IORef qualified as IO
+import Data.Map.Strict qualified as Map
 import Data.Sequence (Seq)
-import qualified Data.Sequence as Seq
-import qualified System.IO as IO
+import Data.Sequence qualified as Seq
+import System.IO qualified as IO
 import Test.HUnit (Test, runTestTT, (~?=))
 
 data TraceIO a
@@ -170,6 +170,5 @@ runCState x inputs = x & run & (`S.evalStateT` Map.empty) & (`runTraceIO` inputs
 -- testCState =
 --   runCState (example6 @_ @Int) [Just "a", Nothing, Nothing, Just "a", Just "p", Just "r", Just "p", Just "q", Just "x"]
 --     ~?= ["Adding...\n", "Adding...\n", "Current value is 2\n", "Resetting...\n", "Current value is 0\n", "Done\n"]
-
 
 -- >>> runTestTT testCState

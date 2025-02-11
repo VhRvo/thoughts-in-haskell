@@ -1,6 +1,8 @@
-{-# LANGUAGE GADTs, GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 -------------------------------------------------------------------------------
+
 -- |
 -- Module      : Control.Monad.CC.Prompt
 -- Copyright   : (c) R. Kent Dybvig, Simon L. Peyton Jones and Amr Sabry
@@ -19,24 +21,25 @@
 --
 -- This module implements the generation of unique prompt names to be used
 -- as delimiters.
-module Control.Monad.CC.Prompt (
-        -- * P, The prompt generation monad
-        P,
-        -- * The Prompt type
-        Prompt,
-        runP,
-        newPromptName,
-        eqPrompt,
-        -- * A type equality datatype
-        Equal(..)
-    ) where
+module Control.Monad.CC.Prompt
+  ( -- * P, The prompt generation monad
+    P,
+
+    -- * The Prompt type
+    Prompt,
+    runP,
+    newPromptName,
+    eqPrompt,
+
+    -- * A type equality datatype
+    Equal (..),
+  )
+where
 
 import Control.Applicative
-
-import Control.Monad.State
 import Control.Monad.Reader
+import Control.Monad.State
 import Control.Monad.Trans
-
 import Unsafe.Coerce
 
 -- | The prompt type, parameterized by two types:
@@ -50,8 +53,8 @@ newtype Prompt ans a = Prompt Int
 
 -- | The prompt generation monad. Represents the type of computations that
 -- make use of a supply of unique prompts.
-newtype P ans m a = P { unP :: StateT Int m a }
-    deriving (Functor, Applicative, Monad, MonadTrans, MonadState Int, MonadReader r)
+newtype P ans m a = P {unP :: StateT Int m a}
+  deriving (Functor, Applicative, Monad, MonadTrans, MonadState Int, MonadReader r)
 
 -- | Runs a computation that makes use of prompts, yielding a result in the
 -- underlying monad.
@@ -60,13 +63,13 @@ runP p = evalStateT (unP p) 0
 
 -- | Generates a new, unique prompt
 newPromptName :: (Monad m) => P ans m (Prompt ans a)
-newPromptName = do i <- get ; put (succ i) ; return (Prompt i)
+newPromptName = do i <- get; put (succ i); return (Prompt i)
 
 -- | A datatype representing type equality. The EQU constructor can
 -- be used to provide evidence that two types are equivalent.
 data Equal a b where
-    EQU :: Equal a a
-    NEQ :: Equal a b
+  EQU :: Equal a a
+  NEQ :: Equal a b
 
 -- Unfortunately, the type system cannot check that the value of two prompts being
 -- equal ensures the equality of their types, so unsafeCoerce must be used.
@@ -75,6 +78,5 @@ data Equal a b where
 -- evidence of that fact, in the form of an /Equal/.
 eqPrompt :: Prompt ans a -> Prompt ans b -> Equal a b
 eqPrompt (Prompt p1) (Prompt p2)
-    | p1 == p2  = unsafeCoerce EQU
-    | otherwise = NEQ
-
+  | p1 == p2 = unsafeCoerce EQU
+  | otherwise = NEQ

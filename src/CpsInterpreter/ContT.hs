@@ -2,13 +2,13 @@ module CpsInterpreter.ContT where
 
 import Control.Arrow
 import Control.Monad.Base
+import Control.Monad.Cont (ContT, MonadCont (..), runContT)
 import Control.Monad.Except (ExceptT, MonadError (..), runExceptT)
 import Control.Monad.IO.Class
-import Control.Monad.Cont (ContT, runContT, MonadCont (..))
 import Control.Monad.Reader (MonadReader (..), ReaderT, runReaderT)
-import qualified Control.Monad.Reader as Reader
+import Control.Monad.Reader qualified as Reader
 import Data.Sequence (Seq, (<|))
-import qualified Data.Sequence as Seq
+import Data.Sequence qualified as Seq
 import Data.Text (Text)
 import Text.Pretty.Simple (pPrint)
 
@@ -91,8 +91,10 @@ runInterpreter = (`runContT` pure) . runExceptT . (`runReaderT` Seq.empty) . unI
 
 demo :: IO ()
 demo = do
-  value <- runInterpreter $
+  value <-
+    runInterpreter $
       evalExpr $
         Escape (Prim Mul (Prim Add (Literal 1) (Literal 3)) (Prim Add (Literal 4) (Application (Variable 0) (Literal 10))))
   pPrint value
-  -- pure ()
+
+-- pure ()

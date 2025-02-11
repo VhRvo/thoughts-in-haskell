@@ -2,10 +2,11 @@ module Traversable.MapAccum where
 
 -- import Data.Traversable ()
 -- import Data.Traversable hiding (mapAccumL, mapAccumR)
-import Control.Monad.State.Strict qualified as Strict
-import Control.Monad.State.Lazy qualified as Lazy
 
-mapAccumL :: Traversable t => (a -> s -> (b, s)) -> s -> t a -> (t b, s)
+import Control.Monad.State.Lazy qualified as Lazy
+import Control.Monad.State.Strict qualified as Strict
+
+mapAccumL :: (Traversable t) => (a -> s -> (b, s)) -> s -> t a -> (t b, s)
 mapAccumL combine initial traversable = Strict.runState (traverse (Strict.state . combine) traversable) initial
 
 -- mapAccumR :: Traversable t => (a -> s -> (b, s))

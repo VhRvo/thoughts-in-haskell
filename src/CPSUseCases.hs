@@ -44,14 +44,16 @@ leafSumCPS' tree' k' = go tree' k'
 
 leafSumCont :: forall r. Tree -> Cont r Int
 leafSumCont tree = callCC $ \k ->
-  let go :: Tree -> Cont r Int
-      go = \case
-        Leaf i -> if i == 6 then k 1000 else pure i
-        Branch left right -> do
-          left' <- go left
-          right' <- go right
-          pure (left' + right')
-   in go tree
+  let
+    go :: Tree -> Cont r Int
+    go = \case
+      Leaf i -> if i == 6 then k 1000 else pure i
+      Branch left right -> do
+        left' <- go left
+        right' <- go right
+        pure (left' + right')
+   in
+    go tree
 
 forLoop :: (Monad m) => [a] -> (a -> ContT () m c) -> m ()
 forLoop items function =
@@ -160,7 +162,7 @@ divException x y handler = callCC $ \ok -> do
 -- 5
 -- Denominator 0
 
-tryCont :: MonadCont m => ((err -> m a) -> m a) -> (err -> m a) -> m a
+tryCont :: (MonadCont m) => ((err -> m a) -> m a) -> (err -> m a) -> m a
 tryCont handlerCont handler = callCC $ \ok -> do
   err <- callCC $ \notOk -> do
     x <- handlerCont notOk
@@ -181,4 +183,3 @@ test = runContT (tryCont sqrtIO (lift . print)) pure
 
 -- >>> test
 -- user error (Prelude.readIO: no parse)
-

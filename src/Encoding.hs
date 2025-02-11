@@ -23,5 +23,3 @@ sE2' p = p (\_ y -> y)
 
 swap' :: ((a -> a -> a) -> a) -> (a -> a -> r) -> r
 swap' p = cPair' (sE2' p) (sE1' p)
-
-

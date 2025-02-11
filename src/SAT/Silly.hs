@@ -4,9 +4,9 @@ import Control.Monad.Cont
 import Control.Monad.Reader
 import Control.Monad.State.Strict
 import Data.Map.Strict (Map, fromList, (!?))
-import qualified Data.Map.Strict as Map
-import Data.Maybe (isJust, fromMaybe)
-import qualified Data.Set as Set
+import Data.Map.Strict qualified as Map
+import Data.Maybe (fromMaybe, isJust)
+import Data.Set qualified as Set
 import Data.Text (Text)
 import SAT.Formulae
 import Test.Hspec.Expectations
@@ -45,11 +45,13 @@ getAssignments = generateAssignments . unique . variables
 -- Solve the SAT problem
 solve :: BooleanFormula -> Maybe Env
 solve formula =
-  let vars = unique (variables formula)
-      assignments = generateAssignments vars
-   in case filter (fromMaybe False . runReaderT (eval formula)) assignments of
-        [] -> Nothing
-        (solution : _) -> Just solution
+  let
+    vars = unique (variables formula)
+    assignments = generateAssignments vars
+   in
+    case filter (fromMaybe False . runReaderT (eval formula)) assignments of
+      [] -> Nothing
+      (solution : _) -> Just solution
 
 main :: IO ()
 main = do
@@ -57,6 +59,6 @@ main = do
   solve test2 `shouldBe` Nothing
   -- solve test3 `shouldBe` Just (Map.fromList [("a", True)])
   solve test4 `shouldBe` Just (Map.fromList [("a", False), ("b", False), ("c", True)])
-  solve test5 `shouldBe` Just (Map.fromList [("a",True),("b",False)])
+  solve test5 `shouldBe` Just (Map.fromList [("a", True), ("b", False)])
 
 -- >>> main

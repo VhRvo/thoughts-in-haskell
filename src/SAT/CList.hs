@@ -2,7 +2,7 @@ module SAT.CList where
 
 import Data.Bifunctor (first)
 import Data.Map.Strict ((!?))
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import SAT.Formulae
 import Test.Hspec.Expectations (shouldBe)
 import Prelude hiding (fail, head, succ, tail)
@@ -27,7 +27,8 @@ instance Functor CList where
   fmap f (CList list) =
     CList
       ( \nil cons ->
-          list nil (cons . f))
+          list nil (cons . f)
+      )
 
 instance Applicative CList where
   pure :: a -> CList a
@@ -39,7 +40,9 @@ instance Applicative CList where
           mf
             nil
             ( \f result ->
-                unCList (fmap f mx) result cons))
+                unCList (fmap f mx) result cons
+            )
+      )
 
 instance Monad CList where
   (>>=) :: CList a -> (a -> CList b) -> CList b
@@ -48,7 +51,8 @@ instance Monad CList where
       ( \nil cons ->
           list
             nil
-            ( \a r -> unCList (f a) r cons))
+            (\a r -> unCList (f a) r cons)
+      )
 
 nil' :: CList a
 nil' = CList const

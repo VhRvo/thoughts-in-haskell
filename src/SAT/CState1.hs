@@ -10,6 +10,3 @@ newtype CState s a
 --         )
 
 -- newtype CState
-
-
-

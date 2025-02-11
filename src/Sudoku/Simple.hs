@@ -116,8 +116,8 @@ boxes =
 
 noDuplicates :: (Eq a) => [a] -> Bool
 noDuplicates = \case
-    [] -> True
-    x:xs -> notElem x xs && noDuplicates xs
+  [] -> True
+  x : xs -> notElem x xs && noDuplicates xs
 
 pruneRow :: Row [Digit] -> Row [Digit]
 pruneRow row = fmap (remove fixed) row

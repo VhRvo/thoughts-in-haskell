@@ -6,30 +6,31 @@ import GHC.Exception
 -- import GHC.Stack
 import GHC.Stack
 
-giveCallStack :: HasCallStack => IO ()
+giveCallStack :: (HasCallStack) => IO ()
 giveCallStack = putStrLn . prettyCallStack . withFrozenCallStack $ callStack
+
 -- giveCallStack = print callStack
 
-getSrcLoc :: HasCallStack => SrcLoc
+getSrcLoc :: (HasCallStack) => SrcLoc
 getSrcLoc = snd $ head $ getCallStack callStack
 
-giveCallStackArbitraryName :: HasCallStack => IO ()
+giveCallStackArbitraryName :: (HasCallStack) => IO ()
 giveCallStackArbitraryName = print callStack
 
 demo :: IO ()
 demo = do
---   print getSrcLoc
+  --   print getSrcLoc
   giveCallStack
   print @Int 11234
 
-
 main :: (HasCallStack) => IO ()
-main = do-- giveCallStackArbitraryName
+main = do
+  -- giveCallStackArbitraryName
   giveCallStack
---   print callStack
+  --   print callStack
   putStrLn . prettyCallStack $ callStack
   putStrLn . prettyCallStack . withFrozenCallStack $ callStack
---   print getSrcLoc
+  --   print getSrcLoc
   demo
 
 -- foo :: HasCallStack => [a] -> a
@@ -39,19 +40,16 @@ main = do-- giveCallStackArbitraryName
 -- bar :: HasCallStack => [Int] -> [Int] -> Int
 -- bar a b = foo a + foo b
 
-data FooException = HasCallStack => FooException
-  deriving anyclass Exception
+data FooException = (HasCallStack) => FooException
+  deriving anyclass (Exception)
 
 instance Show FooException where
-    show :: FooException -> String
-    show FooException = "FooException\n" <> prettyCallStack callStack
+  show :: FooException -> String
+  show FooException = "FooException\n" <> prettyCallStack callStack
 
-
-
-
-foo :: HasCallStack => [a] -> a
+foo :: (HasCallStack) => [a] -> a
 foo [] = throw FooException
-foo (a:_) = a
+foo (a : _) = a
 
-bar :: HasCallStack => [Int] -> [Int] -> Int
+bar :: (HasCallStack) => [Int] -> [Int] -> Int
 bar a b = foo a + foo b

@@ -4,9 +4,9 @@ import Control.Monad.Base
 import Control.Monad.Except (ExceptT (..), MonadError (..))
 import Control.Monad.IO.Class
 import Control.Monad.Reader (MonadReader (..), ReaderT (..))
-import qualified Control.Monad.Reader as Reader
+import Control.Monad.Reader qualified as Reader
 import Data.Sequence (Seq, (<|))
-import qualified Data.Sequence as Seq
+import Data.Sequence qualified as Seq
 import Data.Text (Text)
 
 data Expr

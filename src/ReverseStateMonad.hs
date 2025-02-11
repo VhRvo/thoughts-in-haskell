@@ -1,12 +1,12 @@
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE TupleSections #-}
 
 module ReverseStateMonad where
 
 import Control.Monad.State hiding (state)
 import Data.Bifunctor
 import Data.Map (Map)
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Data.Text (Text)
 
 -- >> cumulative (Map.fromList [(1, "one"), (3, "three"), (2, "two")])
@@ -42,16 +42,20 @@ instance Applicative (ReverseState s) where
   pure x = ReverseState (x,)
   (<*>) :: ReverseState s (a -> b) -> ReverseState s a -> ReverseState s b
   mf <*> mx = ReverseState $ \state ->
-    let (f, past) = runReverseState mf future
-        (x, future) = runReverseState mx state
-     in (f x, past)
+    let
+      (f, past) = runReverseState mf future
+      (x, future) = runReverseState mx state
+     in
+      (f x, past)
 
 instance Monad (ReverseState s) where
   (>>=) :: ReverseState s a -> (a -> ReverseState s b) -> ReverseState s b
   mx >>= f = ReverseState $ \state ->
-    let (x, past) = runReverseState mx future
-        (result, future) = runReverseState (f x) state
-     in (result, past)
+    let
+      (x, past) = runReverseState mx future
+      (result, future) = runReverseState (f x) state
+     in
+      (result, past)
 
 evalReverseState :: ReverseState s a -> s -> a
 evalReverseState m state = fst (runReverseState m state)

@@ -1,7 +1,7 @@
 module SAT.Cont where
 
 import Data.Map.Strict ((!?))
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import SAT.Formulae
 import Test.Hspec.Expectations (shouldBe)
 import Prelude hiding (fail, head, succ, tail)

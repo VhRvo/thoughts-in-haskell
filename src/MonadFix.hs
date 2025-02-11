@@ -1,12 +1,12 @@
-{-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE RecursiveDo #-}
 
 module MonadFix where
 
 import Control.Monad.Fix
+import Data.Maybe (fromJust)
 import Data.Semigroup (Max)
 import System.IO.Unsafe (unsafePerformIO)
-import Data.Maybe (fromJust)
 
 data RoseTree a = RoseTree a [RoseTree a]
   deriving (Show)
@@ -23,11 +23,13 @@ pureMax top =
     go :: (Ord a) => a -> RoseTree a -> (RoseTree (a, a), a)
     go largest (RoseTree x []) = (RoseTree (x, largest) [], x)
     go largest (RoseTree x xs) =
-      let sub = map (go largest) xs
-          (xs', largests) = unzip sub
-          !subMaximum = maximum largests
-    --    in (RoseTree (x, largest) xs', max x (maximum largests))
-       in (RoseTree (x, largest) xs', max x subMaximum)
+      let
+        sub = map (go largest) xs
+        (xs', largests) = unzip sub
+        !subMaximum = maximum largests
+       in
+        --    in (RoseTree (x, largest) xs', max x (maximum largests))
+        (RoseTree (x, largest) xs', max x subMaximum)
 
 impureMin :: forall m a b. (MonadFix m, Ord b) => (a -> m b) -> RoseTree a -> m (RoseTree (a, b))
 impureMin f top = mdo
@@ -63,8 +65,9 @@ inviteTree =
 
 fIO :: IO (Int -> Int)
 fIO = do
-  let fac x = if x == 0 then 1 else x * fac (x - 1)
-      tri x = if x == 0 then 0 else x + tri (x - 1)
+  let
+    fac x = if x == 0 then 1 else x * fac (x - 1)
+    tri x = if x == 0 then 0 else x + tri (x - 1)
   b <- readLn
   pure $ if b then fac else tri
 
@@ -87,23 +90,25 @@ fIOmfix = mfix gIO'
   where
     gIO' :: (Int -> Int) -> IO (Int -> Int)
     gIO' f = do
-        b <- readLn
-        pure $ \x ->
-            if b
-                then if x == 0 then 1 else x * f (x - 1)
-                else if x == 0 then 0 else x + f (x - 1)
+      b <- readLn
+      pure $ \x ->
+        if b
+          then if x == 0 then 1 else x * f (x - 1)
+          else if x == 0 then 0 else x + f (x - 1)
 
 tuple :: ([Int], Int, Int)
 -- tuple = fix $ \(~(a, b, c)) -> ([1, c-5], head a + 2, b * 4)
-tuple = fix $ \(a, b, c) -> ([1, c-5], head a + 2, b * 4)
+tuple = fix $ \(a, b, c) -> ([1, c - 5], head a + 2, b * 4)
   where
-    f (a, b, c) = ([1, c-5], head a + 2, b * 4)
+    f (a, b, c) = ([1, c - 5], head a + 2, b * 4)
 
 maybeFix :: Maybe Int
 -- maybeFix = mfix (const Nothing)
-maybeFix = mfix (\x ->
-    Just 1)
+maybeFix =
+  mfix
+    ( \x ->
+        Just 1
+    )
   where
-    -- mfix' f = let x = fromJust (f x) in Just x
 
-
+-- mfix' f = let x = fromJust (f x) in Just x

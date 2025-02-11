@@ -2,8 +2,8 @@
 
 module StInReaderT.Universal2 where
 
-import Control.Monad.Reader
 import Control.Monad.Except
+import Control.Monad.Reader
 import Control.Monad.ST
 import Data.STRef
 
@@ -34,8 +34,8 @@ test1 = runRST test1' 2
   where
     test1' :: RST Int Char s Int
     test1' = do
-        env <- ask
-        pure (env + 1)
+      env <- ask
+      pure (env + 1)
 
 -- >>> test2
 test2 :: Either Char Int
@@ -43,7 +43,7 @@ test2 = runRST test2' 2
   where
     test2' :: RST Int Char s Int
     test2' = do
-        env <- ask
-        ref <- RST (ReaderT (\_ -> ExceptT (Right <$> newSTRef @Int 1)))
-        value <- RST (ReaderT (\_ -> ExceptT (Right <$> readSTRef ref)))
-        pure (env + value)
+      env <- ask
+      ref <- RST (ReaderT (\_ -> ExceptT (Right <$> newSTRef @Int 1)))
+      value <- RST (ReaderT (\_ -> ExceptT (Right <$> readSTRef ref)))
+      pure (env + value)

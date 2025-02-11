@@ -36,7 +36,7 @@ uncurry f sPair = runPair sPair f
 newtype SMaybe a = SMaybe {runMaybe :: forall b. b -> (a -> b) -> b}
 
 toMaybe :: forall a. SMaybe a -> Maybe a
-toMaybe sMaybe = runMaybe sMaybe  Nothing Just
+toMaybe sMaybe = runMaybe sMaybe Nothing Just
 
 -- maybe1 :: forall a r. r -> (a -> r) -> Maybe a -> r
 -- maybe1 nothing just maybe' = case maybe' of
@@ -125,14 +125,14 @@ map f sList = runList sList empty (\head tail -> cons (f head) (map f tail))
 
 zip :: forall a b. SList a -> SList b -> SList (SPair a b)
 zip as bs =
---   runList as
---     empty
---     ( \headA tailA ->
---         runList bs
---           empty
---           (\headB tailB -> cons (fromPair (headA, headB)) (zip tailA tailB))
---     )
---   @r   r      (SPair a b) -> SList (SPair a b) -> r
+  --   runList as
+  --     empty
+  --     ( \headA tailA ->
+  --         runList bs
+  --           empty
+  --           (\headB tailB -> cons (fromPair (headA, headB)) (zip tailA tailB))
+  --     )
+  --   @r   r      (SPair a b) -> SList (SPair a b) -> r
   SList
     ( \empty' cons' ->
         runList
@@ -149,6 +149,7 @@ zip as bs =
 foldl :: (b -> a -> b) -> b -> SList a -> b
 foldl combine accumulator sList =
   runList sList accumulator (foldl combine . combine accumulator)
+
 -- runList sList accumulator (\head tail -> foldl combine (combine accumulator head) tail)
 
 foldr :: (a -> b -> b) -> b -> SList a -> b

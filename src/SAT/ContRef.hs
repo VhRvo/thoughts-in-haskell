@@ -1,7 +1,7 @@
 module SAT.ContRef where
 
 import Data.Map.Strict (Map, fromList, (!?))
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import Data.Text
 import SAT.Formulae
 import Test.Hspec.Expectations (shouldBe)
@@ -15,11 +15,13 @@ satisfy formula asst succ fail = case formula of
   Var v -> case asst !? v of
     Just b -> succ b asst fail
     Nothing ->
-      let asstT = Map.insert v True asst
-          asstF = Map.insert v False asst
-          tryF = succ False asstF fail
-          tryT = succ True asstT tryF
-       in tryT
+      let
+        asstT = Map.insert v True asst
+        asstF = Map.insert v False asst
+        tryF = succ False asstF fail
+        tryT = succ True asstT tryF
+       in
+        tryT
   Not formula' ->
     let succNot = succ . not
      in satisfy formula' asst succNot fail

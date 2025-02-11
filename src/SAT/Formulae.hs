@@ -1,8 +1,7 @@
 module SAT.Formulae where
 
+import Data.Map.Strict qualified as Map
 import Data.Text (Text)
-
-import qualified Data.Map.Strict as Map
 
 type Env = Map.Map Text Bool
 
@@ -26,4 +25,3 @@ test6 = Var "a" `And` ((Var "b" `And` Not (Var "a")) `Or` Var "c")
 --   solve test2 `shouldBe` Nothing
 --   solve test3 `shouldBe` Just (fromList [("a", True)])
 --   solve test4 `shouldBe` Just (fromList [("a", False), ("b", False), ("c", True)])
-

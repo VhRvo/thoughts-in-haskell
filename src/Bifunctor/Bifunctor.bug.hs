@@ -337,7 +337,7 @@ lci = traverse lciBody
 -- Why do I have to specify a of type kind?
 wciBody :: Char -> (M (State Bool) :.: Count) a
 wciBody ch =
-    wrap (updateState ch)
+  wrap (updateState ch)
   where
     updateState :: Char -> Bool -> (Max Int, Bool)
     updateState ch inWord =

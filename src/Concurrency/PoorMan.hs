@@ -1,16 +1,15 @@
+{-# LANGUAGE FlexibleInstances #-}
 -- {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module Concurrency.PoorMan where
 
-import Control.Monad (ap, liftM)
-import qualified System.IO as IO
-import qualified Data.IORef as IO
-import qualified Network.Socket as Socket
-
 import Concurrency.Class
 import Concurrency.Msg
+import Control.Monad (ap, liftM)
+import Data.IORef qualified as IO
+import Network.Socket qualified as Socket
+import System.IO qualified as IO
 
 data Action
   = Atomic (IO Action) -- an atomic computation, returning a new action
@@ -180,9 +179,7 @@ instance MsgMonad MailBox C where
 
 example6 :: C ()
 example6 = do
-    mailBox <- newMailBox
-    fork $ simulation mailBox 0
-    -- interface mailBox input
-    interface mailBox
-
-
+  mailBox <- newMailBox
+  fork $ simulation mailBox 0
+  -- interface mailBox input
+  interface mailBox

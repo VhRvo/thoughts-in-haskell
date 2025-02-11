@@ -27,26 +27,27 @@ import Control.Monad.Cont (ContT, MonadCont, callCC, runContT)
 import Control.Monad.Except (ExceptT, MonadError (..), runExceptT)
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.State.Strict (MonadState, StateT, evalStateT)
-import qualified Control.Monad.State.Strict as State
+import Control.Monad.State.Strict qualified as State
 import Data.Foldable (for_, traverse_)
 import Data.IORef.Lifted
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 import Data.Maybe (fromMaybe)
-import qualified Data.PQueue.Prio.Min as PQ
+import Data.PQueue.Prio.Min qualified as PQ
 import Data.Time.Clock.POSIX (getPOSIXTime)
 import Data.Void (Void)
-import System.Clock (Clock (Monotonic), fromNanoSecs, getTime, TimeSpec)
+import System.Clock (Clock (Monotonic), TimeSpec, fromNanoSecs, getTime)
 import System.Environment (getArgs, getProgName)
 import System.IO (hPutStrLn, stderr)
 import Text.Megaparsec hiding (runParser)
 import Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Char.Lexer qualified as L
 import Text.Pretty.Simple
   ( CheckColorTty (..),
     OutputOptions (..),
     defaultOutputOptionsNoColor,
     pPrintOpt,
   )
+
 -- end snippet imports
 
 -- start snippet ast-expression
@@ -63,11 +64,12 @@ data Expr
   deriving (Show, Eq)
 
 type Identifier = String
+
 -- end snippet ast-expression
 
 -- start snippet ast-binop
-data BinOp =
-    Plus
+data BinOp
+  = Plus
   | Minus
   | Slash
   | Star
@@ -76,6 +78,7 @@ data BinOp =
   | LessThan
   | GreaterThan
   deriving (Show, Eq)
+
 -- end snippet ast-binop
 
 -- start snippet ast-statement
@@ -93,6 +96,7 @@ data Stmt
   deriving (Show, Eq)
 
 type Program = [Stmt]
+
 -- end snippet ast-statement
 
 -- start snippet basic-parsers
@@ -124,6 +128,7 @@ stringLiteral = char '"' >> manyTill L.charLiteral (char '"') <* sc
 
 integer :: Parser Integer
 integer = lexeme (L.signed sc L.decimal)
+
 -- end snippet basic-parsers
 
 -- start snippet parser-utils
@@ -141,6 +146,7 @@ pPrint =
         outputOptionsCompact = True,
         outputOptionsCompactParens = True
       }
+
 -- end snippet parser-utils
 
 -- start snippet expr-op
@@ -148,7 +154,8 @@ operators :: [[Operator Parser Expr]]
 operators =
   [ [Prefix $ Receive <$ symbol "<-"],
     [ binary Slash $ symbol "/",
-      binary Star $ symbol "*"],
+      binary Star $ symbol "*"
+    ],
     [ binary Plus $ symbol "+",
       binary Minus $ try (symbol "-" <* notFollowedBy (char '>'))
     ],
@@ -161,6 +168,7 @@ operators =
   ]
   where
     binary op symP = InfixL $ Binary op <$ symP
+
 -- end snippet expr-op
 
 -- start snippet expr-term
@@ -169,49 +177,72 @@ term = primary >>= call
   where
     call e =
       ( lookAhead (symbol "(")
-        >> symbol "("
-        >> Call e <$> sepBy expr (symbol ",") <* symbol ")"
-        >>= call )
-      <|> pure e
+          >> symbol "("
+          >> Call e <$> sepBy expr (symbol ",") <* symbol ")"
+          >>= call
+      )
+        <|> pure e
 
-    primary = LNull <$ reserved "null"
-          <|> LBool True <$ reserved "true"
-          <|> LBool False <$ reserved "false"
-          <|> LStr <$> stringLiteral
-          <|> LNum <$> integer
+    primary =
+      LNull
+        <$ reserved "null"
+          <|> LBool True
+        <$ reserved "true"
+          <|> LBool False
+        <$ reserved "false"
+          <|> LStr
+        <$> stringLiteral
+          <|> LNum
+        <$> integer
           <|> Lambda
-            <$> (reserved "function" *> parens (sepBy identifier $ symbol ","))
-            <*> braces (many stmt)
-          <|> Variable <$> identifier
+        <$> (reserved "function" *> parens (sepBy identifier $ symbol ","))
+        <*> braces (many stmt)
+          <|> Variable
+        <$> identifier
           <|> parens expr
+
 -- end snippet expr-term
 
 -- start snippet expr
 expr :: Parser Expr
 expr = makeExprParser term operators
+
 -- end snippet expr
 
 -- start snippet stmt
 stmt :: Parser Stmt
 stmt =
-  IfStmt <$> (reserved "if" *> parens expr) <*> braces (many stmt)
-    <|> WhileStmt <$> (reserved "while" *> parens expr) <*> braces (many stmt)
-    <|> VarStmt <$> (reserved "var" *> identifier) <*> (symbol "=" *> expr <* semi)
-    <|> YieldStmt <$ (reserved "yield" <* semi)
-    <|> SpawnStmt <$> (reserved "spawn" *> expr <* semi)
-    <|> ReturnStmt <$> (reserved "return" *> optional expr <* semi)
-    <|> FunctionStmt
-      <$> try (reserved "function" *> identifier)
-      <*> parens (sepBy identifier $ symbol ",")
-      <*> braces (many stmt)
-    <|> try (AssignStmt <$> identifier <*> (symbol "=" *> expr <* semi))
-    <|> try (SendStmt <$> expr <*> (symbol "->" *> expr <* semi))
-    <|> ExprStmt <$> expr <* semi
+  IfStmt
+    <$> (reserved "if" *> parens expr)
+    <*> braces (many stmt)
+      <|> WhileStmt
+    <$> (reserved "while" *> parens expr)
+    <*> braces (many stmt)
+      <|> VarStmt
+    <$> (reserved "var" *> identifier)
+    <*> (symbol "=" *> expr <* semi)
+      <|> YieldStmt
+    <$ (reserved "yield" <* semi)
+      <|> SpawnStmt
+    <$> (reserved "spawn" *> expr <* semi)
+      <|> ReturnStmt
+    <$> (reserved "return" *> optional expr <* semi)
+      <|> FunctionStmt
+    <$> try (reserved "function" *> identifier)
+    <*> parens (sepBy identifier $ symbol ",")
+    <*> braces (many stmt)
+      <|> try (AssignStmt <$> identifier <*> (symbol "=" *> expr <* semi))
+      <|> try (SendStmt <$> expr <*> (symbol "->" *> expr <* semi))
+      <|> ExprStmt
+    <$> expr
+    <* semi
+
 -- end snippet stmt
 
 -- start snippet program
 program :: Parser Program
 program = sc *> many stmt <* eof
+
 -- end snippet program
 
 -- start snippet value
@@ -223,6 +254,7 @@ data Value
   | Function Identifier [Identifier] [Stmt] Env
   | BuiltinFunction Identifier Int ([Expr] -> Interpreter Value)
   | Chan Channel
+
 -- end snippet value
 
 -- start snippet value-instances
@@ -244,19 +276,21 @@ instance Eq Value where
   Str s1 == Str s2 = s1 == s2
   Num n1 == Num n2 = n1 == n2
   _ == _ = False
+
 -- end snippet value-instances
 
 -- start snippet coroutine
 data Coroutine a = Coroutine
-  { corEnv :: Env
-  , corCont :: a -> Interpreter ()
-  , corReady :: MVar TimeSpec
+  { corEnv :: Env,
+    corCont :: a -> Interpreter (),
+    corReady :: MVar TimeSpec
   }
 
 newCoroutine :: Env -> (a -> Interpreter ()) -> Interpreter (Coroutine a)
 newCoroutine env cont = do
   ready <- newMVar =<< currentSystemTime
   return $ Coroutine env cont ready
+
 -- end snippet coroutine
 
 -- start snippet delayed-coroutine
@@ -269,22 +303,25 @@ newDelayedCoroutine millis env cont = do
     now <- currentSystemTime
     putMVar ready now
   return $ Coroutine env cont ready
+
 -- end snippet delayed-coroutine
 
 -- start snippet env
 type Env = Map.Map Identifier (IORef Value)
+
 -- end snippet env
 
 -- start snippet queue
 type Queue a = IORef (PQ.MinPQueue TimeSpec a, TimeSpec)
 
-newQueue :: MonadBase IO m => m (Queue a)
+newQueue :: (MonadBase IO m) => m (Queue a)
 newQueue = do
   now <- liftBase currentSystemTime
   newIORef (PQ.empty, now)
 
-queueSize :: MonadBase IO m => Queue a -> m Int
+queueSize :: (MonadBase IO m) => Queue a -> m Int
 queueSize = fmap (PQ.size . fst) . readIORef
+
 -- end snippet queue
 
 -- start snippet state
@@ -295,20 +332,28 @@ data InterpreterState = InterpreterState
 
 initInterpreterState :: IO InterpreterState
 initInterpreterState = InterpreterState <$> builtinEnv <*> newQueue
+
 -- end snippet state
 
 -- start snippet builtin-env
 builtinEnv :: IO Env
-builtinEnv = Map.fromList <$> traverse (traverse newIORef) [
-    ("print", BuiltinFunction "print" 1 executePrint)
-  , ("newChannel",
-     BuiltinFunction "newChannel" 0 $ fmap Chan . const (newChannel 0))
-  , ("newBufferedChannel",
-     BuiltinFunction "newBufferedChannel" 1 executeNewBufferedChannel)
-  , ("sleep", BuiltinFunction "sleep" 1 executeSleep)
-  , ("getCurrentMillis",
-     BuiltinFunction "getCurrentMillis" 0 executeGetCurrentMillis)
-  ]
+builtinEnv =
+  Map.fromList
+    <$> traverse
+      (traverse newIORef)
+      [ ("print", BuiltinFunction "print" 1 executePrint),
+        ( "newChannel",
+          BuiltinFunction "newChannel" 0 $ fmap Chan . const (newChannel 0)
+        ),
+        ( "newBufferedChannel",
+          BuiltinFunction "newBufferedChannel" 1 executeNewBufferedChannel
+        ),
+        ("sleep", BuiltinFunction "sleep" 1 executeSleep),
+        ( "getCurrentMillis",
+          BuiltinFunction "getCurrentMillis" 0 executeGetCurrentMillis
+        )
+      ]
+
 -- end snippet builtin-env
 
 -- start snippet channel
@@ -321,6 +366,7 @@ data Channel = Channel
 
 newChannel :: Int -> Interpreter Channel
 newChannel size = Channel size <$> newQueue <*> newQueue <*> newQueue
+
 -- end snippet channel
 
 -- start snippet exception
@@ -328,15 +374,18 @@ data Exception
   = Return Value
   | RuntimeError String
   | CoroutineQueueEmpty
+
 -- end snippet exception
 
 -- start snippet interpreter
 newtype Interpreter a = Interpreter
   { runInterpreter ::
-      ExceptT Exception
-        (ContT
+      ExceptT
+        Exception
+        ( ContT
             (Either Exception ())
-            (StateT InterpreterState IO))
+            (StateT InterpreterState IO)
+        )
         a
   }
   deriving
@@ -349,6 +398,7 @@ newtype Interpreter a = Interpreter
       MonadError Exception,
       MonadCont
     )
+
 -- end snippet interpreter
 
 -- start snippet define-env
@@ -356,13 +406,14 @@ defineVar :: Identifier -> Value -> Interpreter ()
 defineVar name value = do
   env <- State.gets isEnv
   if Map.member name env
-  then throw $ "Variable already defined: " <> name
-  else do
-    valueRef <- newIORef value
-    setEnv $ Map.insert name valueRef env
+    then throw $ "Variable already defined: " <> name
+    else do
+      valueRef <- newIORef value
+      setEnv $ Map.insert name valueRef env
 
 setEnv :: Env -> Interpreter ()
 setEnv env = State.modify' $ \is -> is {isEnv = env}
+
 -- end snippet define-env
 
 -- start snippet lookup-assign-env
@@ -373,6 +424,7 @@ lookupVar name =
 assignVar :: Identifier -> Value -> Interpreter ()
 assignVar name value =
   State.gets isEnv >>= findValueRef name >>= flip writeIORef value
+
 -- end snippet lookup-assign-env
 
 -- start snippet find-value-ref
@@ -384,6 +436,7 @@ findValueRef name env =
 
 throw :: String -> Interpreter a
 throw = throwError . RuntimeError
+
 -- end snippet find-value-ref
 
 -- start snippet evaluate
@@ -397,9 +450,11 @@ evaluate = \case
   Lambda params body -> Function "<lambda>" params body <$> State.gets isEnv
   binary@Binary {} -> evaluateBinaryOp binary
   call@Call {} -> evaluateFuncCall call
-  Receive expr -> evaluate expr >>= \case
-    Chan channel -> channelReceive channel
-    val -> throw $ "Cannot receive from a non-channel: " <> show val
+  Receive expr ->
+    evaluate expr >>= \case
+      Chan channel -> channelReceive channel
+      val -> throw $ "Cannot receive from a non-channel: " <> show val
+
 -- end snippet evaluate
 
 -- start snippet evaluate-binary
@@ -414,23 +469,19 @@ evaluateBinaryOp ~(Binary op leftE rightE) = do
     (Plus, Str s1, _) -> pure $ Str $ s1 <> show right
     (Plus, _, Str s2) -> pure $ Str $ show left <> s2
     (Plus, _, _) -> throw $ errMsg "Cannot add or append"
-
     (Minus, Num n1, Num n2) -> pure $ Num $ n1 - n2
     (Minus, _, _) -> throw $ errMsg "Cannot subtract non-numbers"
-
     (Slash, Num n1, Num n2) -> pure $ Num $ n1 `div` n2
     (Slash, _, _) -> throw $ errMsg "Cannot divide non-numbers"
-
     (Star, Num n1, Num n2) -> pure $ Num $ n1 * n2
     (Star, _, _) -> throw $ errMsg "Cannot multiply non-numbers"
-
     (LessThan, Num n1, Num n2) -> pure $ Boolean $ n1 < n2
     (LessThan, _, _) -> throw $ errMsg "Cannot compare non-numbers"
     (GreaterThan, Num n1, Num n2) -> pure $ Boolean $ n1 > n2
     (GreaterThan, _, _) -> throw $ errMsg "Cannot compare non-numbers"
-
     (Equals, _, _) -> pure $ Boolean $ left == right
     (NotEquals, _, _) -> pure $ Boolean $ left /= right
+
 -- end snippet evaluate-binary
 
 -- start snippet evaluate-call
@@ -446,57 +497,68 @@ evaluateFuncCall ~(Call callee argEs) =
 checkArgCount :: Identifier -> [Expr] -> Int -> Interpreter ()
 checkArgCount funcName argEs arity =
   when (length argEs /= arity) $
-    throw $ funcName <> " call expected " <> show arity
-            <> " argument(s) but received " <> show (length argEs)
+    throw $
+      funcName
+        <> " call expected "
+        <> show arity
+        <> " argument(s) but received "
+        <> show (length argEs)
 
 executePrint :: [Expr] -> Interpreter Value
 executePrint argEs =
   evaluate (head argEs) >>= liftIO . print >> return Null
+
 -- end snippet evaluate-call
 
 -- start snippet execute-new-buffered-channel
 executeNewBufferedChannel :: [Expr] -> Interpreter Value
-executeNewBufferedChannel argEs = evaluate (head argEs) >>= \case
-  Num capacity | capacity >= 0 -> Chan <$> newChannel (fromIntegral capacity)
-  _ -> throw "newBufferedChannel call expected a positive number argument"
+executeNewBufferedChannel argEs =
+  evaluate (head argEs) >>= \case
+    Num capacity | capacity >= 0 -> Chan <$> newChannel (fromIntegral capacity)
+    _ -> throw "newBufferedChannel call expected a positive number argument"
+
 -- end snippet execute-new-buffered-channel
 
 -- start snippet execute-sleep
 executeSleep :: [Expr] -> Interpreter Value
-executeSleep argEs = evaluate (head argEs) >>= \case
-  Num n | n >= 0 -> sleep n >> return Null
-  Num n -> throw $ "Sleep time must be non-negative: " <> show n
-  _ -> throw "sleep call expected a number argument"
+executeSleep argEs =
+  evaluate (head argEs) >>= \case
+    Num n | n >= 0 -> sleep n >> return Null
+    Num n -> throw $ "Sleep time must be non-negative: " <> show n
+    _ -> throw "sleep call expected a number argument"
 
 executeGetCurrentMillis :: [Expr] -> Interpreter Value
 executeGetCurrentMillis _ =
   Num . fromIntegral . floor . (* 1000) <$> liftIO getPOSIXTime
+
 -- end snippet execute-sleep
 
 -- start snippet evaluate-func-call
 evaluateFuncCall' :: Value -> [Expr] -> Interpreter Value
 evaluateFuncCall'
-    ~func@(Function funcName params body funcDefEnv) argEs = do
-  checkArgCount funcName argEs (length params)
-  funcCallEnv <- State.gets isEnv
-  setupFuncEnv
-  retVal <- executeBody funcCallEnv
-  setEnv funcCallEnv
-  return retVal
-  where
-    setupFuncEnv = do
-      args <- traverse evaluate argEs
-      env <- overrideVar funcDefEnv funcName func
-      env' <- foldM (uncurry . overrideVar) env $ zip params args
-      setEnv env'
+  ~func@(Function funcName params body funcDefEnv)
+  argEs = do
+    checkArgCount funcName argEs (length params)
+    funcCallEnv <- State.gets isEnv
+    setupFuncEnv
+    retVal <- executeBody funcCallEnv
+    setEnv funcCallEnv
+    return retVal
+    where
+      setupFuncEnv = do
+        args <- traverse evaluate argEs
+        env <- overrideVar funcDefEnv funcName func
+        env' <- foldM (uncurry . overrideVar) env $ zip params args
+        setEnv env'
 
-    overrideVar env name value =
-      Map.insert name <$> newIORef value <*> pure env
+      overrideVar env name value =
+        Map.insert name <$> newIORef value <*> pure env
 
-    executeBody funcCallEnv =
-      (traverse_ execute body >> return Null) `catchError` \case
-        Return val -> return val
-        err -> setEnv funcCallEnv >> throwError err
+      executeBody funcCallEnv =
+        (traverse_ execute body >> return Null) `catchError` \case
+          Return val -> return val
+          err -> setEnv funcCallEnv >> throwError err
+
 -- end snippet evaluate-func-call
 
 -- start snippet execute
@@ -522,45 +584,52 @@ execute = \case
     defineVar name $ Function name params body env
   YieldStmt -> yield
   SpawnStmt expr -> spawn expr
-  SendStmt expr chan -> evaluate chan >>= \case
-    Chan channel -> do
-      val <- evaluate expr
-      channelSend val channel
-    v -> throw $ "Cannot send to a non-channel: " <> show v
+  SendStmt expr chan ->
+    evaluate chan >>= \case
+      Chan channel -> do
+        val <- evaluate expr
+        channelSend val channel
+      v -> throw $ "Cannot send to a non-channel: " <> show v
   where
     isTruthy = \case
       Null -> False
       Boolean b -> b
       _ -> True
+
 -- end snippet execute
 
 -- start snippet queue-ops
 enqueueAt :: TimeSpec -> a -> Queue a -> Interpreter ()
 enqueueAt time val queue = atomicModifyIORef' queue $ \(q, maxWakeupTime) ->
-  (( PQ.insert time val q,
-     if time > maxWakeupTime then time else maxWakeupTime
-   ), ())
+  ( ( PQ.insert time val q,
+      if time > maxWakeupTime then time else maxWakeupTime
+    ),
+    ()
+  )
 
 enqueue :: a -> Queue a -> Interpreter ()
 enqueue val queue = do
   now <- currentSystemTime
   enqueueAt now val queue
 
-currentSystemTime :: MonadIO m => m TimeSpec
+currentSystemTime :: (MonadIO m) => m TimeSpec
 currentSystemTime = liftIO $ getTime Monotonic
 
 dequeue :: Queue a -> Interpreter (Maybe a)
 dequeue queue = atomicModifyIORef' queue $ \(q, maxWakeupTime) ->
   if PQ.null q
     then ((q, maxWakeupTime), Nothing)
-    else let ((_, val), q') = PQ.deleteFindMin q
-         in ((q', maxWakeupTime), Just val)
+    else
+      let ((_, val), q') = PQ.deleteFindMin q
+       in ((q', maxWakeupTime), Just val)
+
 -- end snippet queue-ops
 
 -- start snippet schedule-delayed-coroutine
 scheduleDelayedCoroutine :: TimeSpec -> Coroutine () -> Interpreter ()
 scheduleDelayedCoroutine wakeupTime coroutine = do
   State.gets isCoroutines >>= enqueueAt wakeupTime coroutine
+
 -- end snippet schedule-delayed-coroutine
 
 -- start snippet coroutine-ops
@@ -576,6 +645,7 @@ runNextCoroutine =
       void $ takeMVar corReady
       setEnv corEnv
       corCont ()
+
 -- end snippet coroutine-ops
 
 -- start snippet yield
@@ -585,6 +655,7 @@ yield = do
   callCC $ \cont -> do
     newCoroutine env cont >>= scheduleCoroutine
     runNextCoroutine
+
 -- end snippet yield
 
 -- start snippet spawn
@@ -593,6 +664,7 @@ spawn expr = do
   env <- State.gets isEnv
   coroutine <- newCoroutine env (const $ evaluate expr >> runNextCoroutine)
   scheduleCoroutine coroutine
+
 -- end snippet spawn
 
 -- start snippet sleep
@@ -604,6 +676,7 @@ sleep millis = do
   callCC $ \cont -> do
     scheduleDelayedCoroutine wakeupTime =<< newDelayedCoroutine millis env cont
     runNextCoroutine
+
 -- end snippet sleep
 
 -- start snippet await-term
@@ -611,9 +684,11 @@ awaitTermination :: Interpreter ()
 awaitTermination = do
   (coroutines, maxWakeupTime) <- readIORef =<< State.gets isCoroutines
   dur <- calcSleepDuration maxWakeupTime
-  unless (PQ.null coroutines) $ if dur > 0
-    then sleep dur >> awaitTermination
-    else yield >> awaitTermination
+  unless (PQ.null coroutines) $
+    if dur > 0
+      then sleep dur >> awaitTermination
+      else yield >> awaitTermination
+
 -- end snippet await-term
 
 -- start snippet calc-sleep-duration
@@ -621,6 +696,7 @@ calcSleepDuration :: TimeSpec -> Interpreter Integer
 calcSleepDuration maxWakeupTime = do
   now <- currentSystemTime
   return $ 1 + fromIntegral (maxWakeupTime - now) `div` 1000000
+
 -- end snippet calc-sleep-duration
 
 -- start snippet channel-send
@@ -632,12 +708,11 @@ channelSend value Channel {..} = do
   dequeue channelReceiveQueue >>= \case
     -- there are pending receives
     Just coroutine@Coroutine {..} ->
-      scheduleCoroutine $ coroutine { corCont = const $ corCont value }
-
+      scheduleCoroutine $ coroutine {corCont = const $ corCont value}
     -- there are no pending receives and the buffer is not full
-    Nothing | channelCapacity > 0 && bufferSize < channelCapacity ->
-      enqueue value channelBuffer
-
+    Nothing
+      | channelCapacity > 0 && bufferSize < channelCapacity ->
+          enqueue value channelBuffer
     -- there are no pending receives and
     -- (the buffer is full or the channel is unbuffered)
     Nothing | sendQueueSize < maxSendQueueSize -> do
@@ -651,6 +726,7 @@ channelSend value Channel {..} = do
     Nothing -> throw "Channel send queue is full"
   where
     maxSendQueueSize = 4
+
 -- end snippet channel-send
 
 -- start snippet channel-receive
@@ -683,27 +759,29 @@ channelReceive Channel {..} = do
 
     -- the receive queue is full
     (Nothing, Nothing) -> throw "Channel receive queue is full"
-
     -- the buffer is not empty and there are no pending sends
     (Nothing, Just bufferedValue) -> return bufferedValue
   where
     maxReceiveQueueSize = 4
+
 -- end snippet channel-receive
 
 -- start snippet interpret
 interpret :: Program -> IO (Either String ())
 interpret program = do
   state <- initInterpreterState
-  retVal <- flip evalStateT state
-    . flip runContT return
-    . runExceptT
-    . runInterpreter
-    $ (traverse_ execute program >> awaitTermination)
+  retVal <-
+    flip evalStateT state
+      . flip runContT return
+      . runExceptT
+      . runInterpreter
+      $ (traverse_ execute program >> awaitTermination)
   case retVal of
     Left (RuntimeError err) -> return $ Left err
     Left (Return _) -> return $ Left "Cannot return from outside functions"
     Left CoroutineQueueEmpty -> return $ Right ()
     Right _ -> return $ Right ()
+
 -- end snippet interpret
 
 -- start snippet run-file
@@ -712,16 +790,20 @@ runFile file = do
   code <- readFile file
   case runParser program code of
     Left err -> hPutStrLn stderr err
-    Right program -> interpret program >>= \case
-      Left err -> hPutStrLn stderr $ "ERROR: " <> err
-      _ -> return ()
+    Right program ->
+      interpret program >>= \case
+        Left err -> hPutStrLn stderr $ "ERROR: " <> err
+        _ -> return ()
+
 -- end snippet run-file
 
 -- start snippet main
 main :: IO ()
-main = getArgs >>= \case
-  [file] -> runFile file
-  _ -> do
-    prog <- getProgName
-    hPutStrLn stderr $ "Usage: " <> prog <> " <file>"
+main =
+  getArgs >>= \case
+    [file] -> runFile file
+    _ -> do
+      prog <- getProgName
+      hPutStrLn stderr $ "Usage: " <> prog <> " <file>"
+
 -- end snippet main
