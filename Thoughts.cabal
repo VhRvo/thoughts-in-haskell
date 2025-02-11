@@ -177,6 +177,7 @@ library
         , BreadthFirst.Level
         , BreadthFirst.Rose
         , StInReaderT.Universal
+        , StInReaderT.Universal2
         , StInReaderT.Existential
         , StInReaderT.TypeSynonym
 
