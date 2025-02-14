@@ -1,30 +1,30 @@
 module NbE.Untyped where
 
-import Data.Text (Text)
-import qualified Data.Text as T
-import Data.Map.Strict (Map, (!?))
-import qualified Data.Map.Strict as Env
-import Prelude hiding (id)
 import Control.Monad.State
+import Data.Map.Strict (Map, (!?))
+import Data.Map.Strict qualified as Env
+import Data.Text (Text)
+import Data.Text qualified as T
+import Prelude hiding (id)
 
 data Type
-    = Base Text
-    | Func Type Type
+  = Base Text
+  | Func Type Type
 
 data Value
-    = VLam Env Text Term
-    | VNeutral Neutral
+  = VLam Env Text Term
+  | VNeutral Neutral
 
 data Neutral
-    = NVar Text
-    | NApp Neutral Value
+  = NVar Text
+  | NApp Neutral Value
 
 type Env = Map Text Value
 
 data Term
-    = Var Text
-    | Lam Text Term
-    | App Term Term
+  = Var Text
+  | Lam Text Term
+  | App Term Term
   deriving (Show)
 
 eval :: Env -> Term -> Maybe Value
@@ -43,13 +43,13 @@ apply fun arg = case fun of
 
 reifyNeutral :: Neutral -> StateT Int Maybe Term
 reifyNeutral = \case
-  NVar id  -> pure (Var id)
+  NVar id -> pure (Var id)
   NApp neutral arg ->
     App <$> reifyNeutral neutral <*> reify arg
 
 reify :: Value -> StateT Int Maybe Term
 reify = \case
---   fun@(VLam env id body) -> do
+  --   fun@(VLam env id body) -> do
   fun@(VLam {}) -> do
     index <- get
     modify' (+ 1)
@@ -62,9 +62,8 @@ reify = \case
 
 normalize :: [Text] -> Term -> Maybe Term
 normalize frees term = (`evalStateT` 0) $ do
-    value <- lift $ eval (Env.fromList ((\var -> (var, VNeutral (NVar var))) <$> frees)) term
-    reify value
+  value <- lift $ eval (Env.fromList ((\var -> (var, VNeutral (NVar var))) <$> frees)) term
+  reify value
 
 demo :: Maybe Term
 demo = normalize [] (Lam "x" (App (Lam "y" (Lam "x" (Var "y"))) (Var "x")))
-

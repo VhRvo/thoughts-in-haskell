@@ -1,7 +1,8 @@
 module Memorize.Pure where
 
-import Data.Map
 import Control.Monad.State
+import Data.Map
+
 -- import Data.Hashable
 
 -- memorize :: (Ord a, Monad m) =>

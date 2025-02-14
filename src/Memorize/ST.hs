@@ -1,8 +1,8 @@
 module Memorize.ST where
 
 import Control.Monad.ST
-import Data.STRef
 import Data.HashTable.ST.Basic
+import Data.STRef
 
 -- memorize :: (Eq a, Hashable a) => ((a -> b) -> a -> b) -> ((a -> b) -> a -> b)
 -- memorize factorial f x = do
@@ -13,4 +13,3 @@ import Data.HashTable.ST.Basic
 --       writeSTRef ref (Just v)
 --       return v
 --     Just v  -> return v
-
