@@ -140,6 +140,7 @@ library
         , Effectful.Try
         , Megaparsec.IndentationSensitive
         , GenericRandom.Demo
+        , GenericRandom.Text
         , MonoidAndContinuation.Flatten
         , ProductOfMonoidIsMonoid
         , InvariantInCPS.Normal
@@ -180,6 +181,10 @@ library
         , StInReaderT.Universal2
         , StInReaderT.Existential
         , StInReaderT.TypeSynonym
+        , FingerTree.Monoid
+        , Memorize.ST
+        , NbE.Closed
+        , NbE.Untyped
 
 
     -- Modules included in this library but not exported.
@@ -245,6 +250,8 @@ library
       , generic-deriving
       , tardis
       , logict
+      , quickcheck-instances
+      , hashtables
 
     -- Directories containing source files.
     hs-source-dirs:   src
