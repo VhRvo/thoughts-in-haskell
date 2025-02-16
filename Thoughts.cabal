@@ -185,6 +185,7 @@ library
         , Memorize.ST
         , NbE.Closed
         , NbE.Untyped
+        , PE.Simple
 
 
     -- Modules included in this library but not exported.
