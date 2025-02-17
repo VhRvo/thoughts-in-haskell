@@ -189,6 +189,7 @@ library
         , PE.LetList
         , PE.StateLetList
         , PE.STLetList
+        , TypeSafeObservableSharing.Class
         , TypeSafeObservableSharing.BitGraph
 
 

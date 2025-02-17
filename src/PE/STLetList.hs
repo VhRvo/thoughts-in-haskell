@@ -7,8 +7,8 @@
 
 module PE.STLetList where
 
-import Control.Monad.ST
 import Control.Monad.Reader
+import Control.Monad.ST
 import Data.Functor.Const
 import Data.Functor.Identity
 import Data.STRef
