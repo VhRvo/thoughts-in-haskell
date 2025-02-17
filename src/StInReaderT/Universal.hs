@@ -22,7 +22,8 @@ runReaderT' r m = runReaderT m r
 
 runRST :: forall r a. (forall s. RST r s a) -> r -> a
 -- ($) is impredicative by special compiler magic.
-runRST rst r = runST $ runReaderT' r $ unRST rst
+-- runRST rst r = runST $ runReaderT' r $ unRST rst
+runRST rst r = runST (runReaderT' r (unRST rst))
 
 -- use ImpredicativeTypes extension
 -- runRST rst r = runST . runReaderT' r . unRST $ rst
