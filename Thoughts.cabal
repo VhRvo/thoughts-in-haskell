@@ -188,7 +188,7 @@ library
         , PE.Simple
         , PE.LetList
         , PE.StateLetList
-        , PE.StateLetListClass
+        , PE.STLetList
 
 
     -- Modules included in this library but not exported.

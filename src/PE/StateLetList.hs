@@ -1,8 +1,9 @@
 -- https://zhuanlan.zhihu.com/p/643694771
+
 -- {-# LANGUAGE DeriveFunctor #-}
 -- {-# LANGUAGE DeriveApplicative #-}
 -- {-# LANGUAGE DeriveMonad #-}
-{-# LANGUAGE FlexibleInstances #-}
+-- {-# LANGUAGE FlexibleInstances #-}
 
 module PE.StateLetList where
 
@@ -20,15 +21,27 @@ mbd m count
   | count `mod` 2 == 1 = m <> mbd m (count - 1)
   | otherwise = mbd (m <> m) (count `div` 2)
 
--- mbdImpure :: (Monoid (m a), Monad m) => m a -> Int -> m a
--- mbdImpure impure count
---   | count == 0 = pure mempty
---   | count `mod` 2 == 1 = do
---       value <- impure
---       (value <>) <$> mbdImpure (pure value) (count - 1)
---   | otherwise = do
---       value <- impure
---       mbdImpure (pure (value <> value)) (count `div` 2)
+-- This is actually pure implementation.
+-- Every (<>) operations is pure.
+mbdPure' :: (Monoid a, Monoid (m a), Monad m) => m a -> Int -> m a
+mbdPure' impure count
+  | count == 0 = pure mempty
+  | count `mod` 2 == 1 = do
+      value <- impure
+      (value <>) <$> mbdPure' (pure value) (count - 1)
+  | otherwise = do
+      value <- impure
+      mbdPure' (pure (value <> value)) (count `div` 2)
+
+mbdImpure' :: (Monoid a, Monoid (m a), Monad m) => m a -> Int -> m a
+mbdImpure' impure count
+  | count == 0 = pure mempty
+  | count `mod` 2 == 1 = do
+      value <- impure
+      (value <>) <$> mbdImpure' (pure value) (count - 1)
+  | otherwise = do
+      value <- impure
+      mbdImpure' (pure value <> pure value) (count `div` 2)
 
 mbdImpure :: (Monoid (m a), Monad m) => m a -> Int -> m a
 mbdImpure impure count
@@ -36,7 +49,6 @@ mbdImpure impure count
   | count `mod` 2 == 1 = do
       value <- impure
       pure value <> mbdImpure (pure value) (count - 1)
-  -- (value <>) <$> mbdImpure (pure value) (count - 1)
   | otherwise = do
       value <- impure
       mbdImpure (pure value <> pure value) (count `div` 2)
@@ -55,8 +67,6 @@ data Expr
   | Let Text Expr Expr
   deriving (Show)
 
--- newtype Sum a = Sum a
--- newtype Product a = Product a
 newtype Sum = Sum {getSum :: Expr}
   deriving (Show)
 
@@ -66,47 +76,26 @@ instance Semigroup Sum where
 instance Monoid Sum where
   mempty = Sum (Int 0)
 
+class Sharable a where
+  share :: Text -> a
+
+instance Sharable Sum where
+  share var = Sum (Var var)
+
 newtype SumLetList a = SumLetList {getSumLetList :: State (Int, [(Text, Sum)]) a}
   deriving newtype (Functor, Applicative, Monad)
 
--- instance (Semigroup a) => Semigroup (SumLetList a) where
---   (<>) (SumLetList lhs) (SumLetList rhs) = SumLetList $ do
---     lhs' <- lhs
---     rhs' <- rhs
---     (index, letList) <- get
---     let var = T.pack ("$" <> show index)
---     put (index + 1, (var, lhs' <> rhs') : letList)
---     pure (Sum (Var var))
-
--- instance (Monoid a) => Monoid (SumLetList a) where
---   mempty = SumLetList $ pure mempty
-
-instance Semigroup (SumLetList Sum) where
+instance (a ~ Sum, Semigroup a, Sharable a) => Semigroup (SumLetList a) where
   (<>) (SumLetList lhs) (SumLetList rhs) = SumLetList $ do
     lhs' <- lhs
     rhs' <- rhs
     (index, letList) <- get
     let var = T.pack ("$" <> show index)
     put (index + 1, (var, lhs' <> rhs') : letList)
-    pure (Sum (Var var))
+    pure (share var)
 
-instance Monoid (SumLetList Sum) where
+instance (a ~ Sum, Monoid a, Sharable a) => Monoid (SumLetList a) where
   mempty = SumLetList $ pure mempty
-
--- newtype Product = Product Expr
---   deriving (Show)
-
--- instance Semigroup Product where
---     (<>) (Product lhs) (Product rhs) = Product (Mul lhs rhs)
-
--- instance Monoid Product where
---     mempty = Product (Int 1)
-
--- instance SemiRing Expr where
---     zero = Int 0
---     one = Int 1
---     add = Add
---     mul = Mul
 
 -- demo1 :: Sum
 -- demo1 = mbd (Sum (Var "x")) 13
@@ -117,6 +106,16 @@ instance Monoid (SumLetList Sum) where
 --   letList <- newSTRef []
 --   getSumLetList (mbd (SumLetList (\_ _ -> pure (Const (Sum (Var "x"))))) 13) counter letList
 
-demo2Monad :: (Sum, (Int, [(Text, Sum)]))
-demo2Monad =
-  runIdentity ((`runStateT` (1, [])) (getSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13)))
+demo2Impure :: (Sum, (Int, [(Text, Sum)]))
+demo2Impure =
+  runIdentity
+    ( (`runStateT` (1, []))
+        (getSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13))
+    )
+
+demo2Impure' :: (Sum, (Int, [(Text, Sum)]))
+demo2Impure' =
+  runIdentity
+    ( (`runStateT` (1, []))
+        (getSumLetList (mbdImpure' (SumLetList (pure (Sum (Var "x")))) 13))
+    )

@@ -5,24 +5,33 @@
 -- {-# LANGUAGE DeriveMonad #-}
 -- {-# LANGUAGE FlexibleInstances #-}
 
-module PE.StateLetListClass where
+module PE.STLetList where
 
 import Control.Monad.ST
-import Control.Monad.State
+import Control.Monad.Reader
 import Data.Functor.Const
 import Data.Functor.Identity
 import Data.STRef
 import Data.Text (Text)
 import Data.Text qualified as T
 
-class Sharable a where
-  share :: Text -> a
-
 mbd :: (Monoid m) => m -> Int -> m
 mbd m count
   | count == 0 = mempty
   | count `mod` 2 == 1 = m <> mbd m (count - 1)
   | otherwise = mbd (m <> m) (count `div` 2)
+
+-- This is actually pure implementation.
+-- Every (<>) operations is pure.
+mbdPure' :: (Monoid a, Monoid (m a), Monad m) => m a -> Int -> m a
+mbdPure' impure count
+  | count == 0 = pure mempty
+  | count `mod` 2 == 1 = do
+      value <- impure
+      (value <>) <$> mbdPure' (pure value) (count - 1)
+  | otherwise = do
+      value <- impure
+      mbdPure' (pure (value <> value)) (count `div` 2)
 
 mbdImpure' :: (Monoid a, Monoid (m a), Monad m) => m a -> Int -> m a
 mbdImpure' impure count
@@ -32,7 +41,7 @@ mbdImpure' impure count
       (value <>) <$> mbdImpure' (pure value) (count - 1)
   | otherwise = do
       value <- impure
-      mbdImpure' (pure (value <> value)) (count `div` 2)
+      mbdImpure' (pure value <> pure value) (count `div` 2)
 
 mbdImpure :: (Monoid (m a), Monad m) => m a -> Int -> m a
 mbdImpure impure count
@@ -58,8 +67,6 @@ data Expr
   | Let Text Expr Expr
   deriving (Show)
 
--- newtype Sum a = Sum a
--- newtype Product a = Product a
 newtype Sum = Sum {getSum :: Expr}
   deriving (Show)
 
@@ -69,50 +76,31 @@ instance Semigroup Sum where
 instance Monoid Sum where
   mempty = Sum (Int 0)
 
+class Sharable a where
+  share :: Text -> a
+
 instance Sharable Sum where
   share var = Sum (Var var)
 
-newtype SumLetList a = SumLetList {getSumLetList :: State (Int, [(Text, Sum)]) a}
+newtype SumLetList s a = SumLetList {getSumLetList :: ReaderT (STRef s Int, STRef s [(Text, Sum)]) (ST s) a}
   deriving newtype (Functor, Applicative, Monad)
 
-instance (a ~ Sum, Semigroup a, Sharable a) => Semigroup (SumLetList a) where
+runSumLetList :: (forall s. SumLetList s a) -> forall s. STRef s Int -> STRef s [(Text, Sum)] -> ST s a
+runSumLetList sumLetList = \counterRef letListRef -> (`runReaderT` (counterRef, letListRef)) $ getSumLetList sumLetList
+
+instance (a ~ Sum, Semigroup a, Sharable a) => Semigroup (SumLetList s a) where
   (<>) (SumLetList lhs) (SumLetList rhs) = SumLetList $ do
     lhs' <- lhs
     rhs' <- rhs
-    (index, letList) <- get
+    (counterRef, letListRef) <- ask
+    index <- lift $ readSTRef counterRef
     let var = T.pack ("$" <> show index)
-    put (index + 1, (var, lhs' <> rhs') : letList)
+    lift $ modifySTRef' counterRef (+ 1)
+    lift $ modifySTRef' letListRef ((var, lhs' <> rhs') :)
     pure (share var)
 
-instance (a ~ Sum, Monoid a, Sharable a) => Monoid (SumLetList a) where
+instance (a ~ Sum, Monoid a, Sharable a) => Monoid (SumLetList s a) where
   mempty = SumLetList $ pure mempty
-
--- instance Semigroup (SumLetList Sum) where
---   (<>) (SumLetList lhs) (SumLetList rhs) = SumLetList $ do
---     lhs' <- lhs
---     rhs' <- rhs
---     (index, letList) <- get
---     let var = T.pack ("$" <> show index)
---     put (index + 1, (var, lhs' <> rhs') : letList)
---     pure (Sum (Var var))
-
--- instance Monoid (SumLetList Sum) where
---   mempty = SumLetList $ pure mempty
-
--- newtype Product = Product Expr
---   deriving (Show)
-
--- instance Semigroup Product where
---     (<>) (Product lhs) (Product rhs) = Product (Mul lhs rhs)
-
--- instance Monoid Product where
---     mempty = Product (Int 1)
-
--- instance SemiRing Expr where
---     zero = Int 0
---     one = Int 1
---     add = Add
---     mul = Mul
 
 -- demo1 :: Sum
 -- demo1 = mbd (Sum (Var "x")) 13
@@ -123,16 +111,20 @@ instance (a ~ Sum, Monoid a, Sharable a) => Monoid (SumLetList a) where
 --   letList <- newSTRef []
 --   getSumLetList (mbd (SumLetList (\_ _ -> pure (Const (Sum (Var "x"))))) 13) counter letList
 
-demo2Impure :: (Sum, (Int, [(Text, Sum)]))
-demo2Impure =
-  runIdentity
-    ( (`runStateT` (1, []))
-        (getSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13))
-    )
+demo2Impure :: (Sum, Int, [(Text, Sum)])
+demo2Impure = runST $ do
+  counterRef <- newSTRef 0
+  letListRef <- newSTRef []
+  result <- runSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13) counterRef letListRef
+  counter <- readSTRef counterRef
+  letList <- readSTRef letListRef
+  pure (result, counter, letList)
 
-demo2Impure' :: (Sum, (Int, [(Text, Sum)]))
-demo2Impure' =
-  runIdentity
-    ( (`runStateT` (1, []))
-        (getSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13))
-    )
+demo2Impure' :: (Sum, Int, [(Text, Sum)])
+demo2Impure' = runST $ do
+  counterRef <- newSTRef 0
+  letListRef <- newSTRef []
+  result <- runSumLetList (mbdImpure' (SumLetList (pure (Sum (Var "x")))) 13) counterRef letListRef
+  counter <- readSTRef counterRef
+  letList <- readSTRef letListRef
+  pure (result, counter, letList)
