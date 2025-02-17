@@ -7,13 +7,13 @@
 
 module PE.StateLetListClass where
 
-import Data.Text (Text)
-import qualified Data.Text as T
 import Control.Monad.ST
-import Data.STRef
-import Data.Functor.Const
 import Control.Monad.State
+import Data.Functor.Const
 import Data.Functor.Identity
+import Data.STRef
+import Data.Text (Text)
+import Data.Text qualified as T
 
 class Sharable a where
   share :: Text -> a
@@ -60,19 +60,19 @@ data Expr
 
 -- newtype Sum a = Sum a
 -- newtype Product a = Product a
-newtype Sum = Sum { getSum :: Expr }
+newtype Sum = Sum {getSum :: Expr}
   deriving (Show)
 
 instance Semigroup Sum where
-    (<>) (Sum lhs) (Sum rhs) = Sum (Add lhs rhs)
+  (<>) (Sum lhs) (Sum rhs) = Sum (Add lhs rhs)
 
 instance Monoid Sum where
-    mempty = Sum (Int 0)
+  mempty = Sum (Int 0)
 
 instance Sharable Sum where
   share var = Sum (Var var)
 
-newtype SumLetList a = SumLetList { getSumLetList :: State (Int, [(Text, Sum)]) a }
+newtype SumLetList a = SumLetList {getSumLetList :: State (Int, [(Text, Sum)]) a}
   deriving newtype (Functor, Applicative, Monad)
 
 instance (a ~ Sum, Semigroup a, Sharable a) => Semigroup (SumLetList a) where
@@ -125,10 +125,14 @@ instance (a ~ Sum, Monoid a, Sharable a) => Monoid (SumLetList a) where
 
 demo2Impure :: (Sum, (Int, [(Text, Sum)]))
 demo2Impure =
-  runIdentity ((`runStateT` (1, []))
-   (getSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13)))
+  runIdentity
+    ( (`runStateT` (1, []))
+        (getSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13))
+    )
 
 demo2Impure' :: (Sum, (Int, [(Text, Sum)]))
 demo2Impure' =
-  runIdentity ((`runStateT` (1, []))
-   (getSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13)))
+  runIdentity
+    ( (`runStateT` (1, []))
+        (getSumLetList (mbdImpure (SumLetList (pure (Sum (Var "x")))) 13))
+    )

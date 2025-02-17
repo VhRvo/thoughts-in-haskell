@@ -1,5 +1,4 @@
 -- https://zhuanlan.zhihu.com/p/643694771
-
 -- {-# LANGUAGE DeriveFunctor #-}
 -- {-# LANGUAGE DeriveApplicative #-}
 -- {-# LANGUAGE DeriveMonad #-}
@@ -7,13 +6,13 @@
 
 module PE.StateLetList where
 
-import Data.Text (Text)
-import qualified Data.Text as T
 import Control.Monad.ST
-import Data.STRef
-import Data.Functor.Const
 import Control.Monad.State
+import Data.Functor.Const
 import Data.Functor.Identity
+import Data.STRef
+import Data.Text (Text)
+import Data.Text qualified as T
 
 mbd :: (Monoid m) => m -> Int -> m
 mbd m count
@@ -37,7 +36,7 @@ mbdImpure impure count
   | count `mod` 2 == 1 = do
       value <- impure
       pure value <> mbdImpure (pure value) (count - 1)
-      -- (value <>) <$> mbdImpure (pure value) (count - 1)
+  -- (value <>) <$> mbdImpure (pure value) (count - 1)
   | otherwise = do
       value <- impure
       mbdImpure (pure value <> pure value) (count `div` 2)
@@ -58,16 +57,16 @@ data Expr
 
 -- newtype Sum a = Sum a
 -- newtype Product a = Product a
-newtype Sum = Sum { getSum :: Expr }
+newtype Sum = Sum {getSum :: Expr}
   deriving (Show)
 
 instance Semigroup Sum where
-    (<>) (Sum lhs) (Sum rhs) = Sum (Add lhs rhs)
+  (<>) (Sum lhs) (Sum rhs) = Sum (Add lhs rhs)
 
 instance Monoid Sum where
-    mempty = Sum (Int 0)
+  mempty = Sum (Int 0)
 
-newtype SumLetList a = SumLetList { getSumLetList :: State (Int, [(Text, Sum)]) a }
+newtype SumLetList a = SumLetList {getSumLetList :: State (Int, [(Text, Sum)]) a}
   deriving newtype (Functor, Applicative, Monad)
 
 -- instance (Semigroup a) => Semigroup (SumLetList a) where

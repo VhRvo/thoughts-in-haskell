@@ -3,7 +3,7 @@
 module PE.Simple where
 
 import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
 
 mbd :: (Monoid m) => m -> Int -> m
 mbd m count
@@ -28,27 +28,27 @@ data Expr
 -- newtype Product a = Product a
 newtype Sum = Sum Expr
   deriving (Show)
+
 newtype Product = Product Expr
   deriving (Show)
 
 instance Semigroup Sum where
-    (<>) (Sum lhs) (Sum rhs) = Sum (Add lhs rhs)
+  (<>) (Sum lhs) (Sum rhs) = Sum (Add lhs rhs)
 
 instance Monoid Sum where
-    mempty = Sum (Int 0)
+  mempty = Sum (Int 0)
 
 instance Semigroup Product where
-    (<>) (Product lhs) (Product rhs) = Product (Mul lhs rhs)
+  (<>) (Product lhs) (Product rhs) = Product (Mul lhs rhs)
 
 instance Monoid Product where
-    mempty = Product (Int 1)
+  mempty = Product (Int 1)
 
 instance SemiRing Expr where
-    zero = Int 0
-    one = Int 1
-    add = Add
-    mul = Mul
+  zero = Int 0
+  one = Int 1
+  add = Add
+  mul = Mul
 
 demo :: Sum
 demo = mbd (Sum (Var "x")) 13
-
