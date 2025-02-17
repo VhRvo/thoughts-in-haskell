@@ -186,6 +186,9 @@ library
         , NbE.Closed
         , NbE.Untyped
         , PE.Simple
+        , PE.LetList
+        , PE.StateLetList
+        , PE.StateLetListClass
 
 
     -- Modules included in this library but not exported.
