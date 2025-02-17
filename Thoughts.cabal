@@ -189,6 +189,7 @@ library
         , PE.LetList
         , PE.StateLetList
         , PE.STLetList
+        , TypeSafeObservableSharing.BitGraph
 
 
     -- Modules included in this library but not exported.
