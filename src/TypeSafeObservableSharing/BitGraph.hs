@@ -39,6 +39,8 @@ demo1 = run parity (repeat True)
 demo2 :: Bit
 demo2 = parity (Var "x")
 
+-- demo3 :: Graph
+
 type Unique = Int
 
 data BitGraph
@@ -52,6 +54,16 @@ data BitNode s
 
 instance MuRef Bit where
   type DeRef Bit = BitNode
+  mapDeRef ::
+    (Applicative f) =>
+    (Bit -> f u) ->
+    Bit ->
+    f (BitNode u)
+  mapDeRef f = \case
+    Xor b1 b2 -> GraphXor <$> f b1 <*> f b2
+    Delay b -> GraphDelay <$> f b
+    Input bs -> pure $ GraphInput bs
+    Var var -> pure $ GraphVar var
 
 graph :: BitGraph
 graph =

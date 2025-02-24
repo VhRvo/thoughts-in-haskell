@@ -86,7 +86,7 @@ newtype SumLetList s a = SumLetList {getSumLetList :: ReaderT (STRef s Int, STRe
   deriving newtype (Functor, Applicative, Monad)
 
 runSumLetList :: (forall s. SumLetList s a) -> forall s. STRef s Int -> STRef s [(Text, Sum)] -> ST s a
-runSumLetList sumLetList = \counterRef letListRef -> (`runReaderT` (counterRef, letListRef)) $ getSumLetList sumLetList
+runSumLetList sumLetList counterRef letListRef = (`runReaderT` (counterRef, letListRef)) $ getSumLetList sumLetList
 
 instance (a ~ Sum, Semigroup a, Sharable a) => Semigroup (SumLetList s a) where
   (<>) (SumLetList lhs) (SumLetList rhs) = SumLetList $ do

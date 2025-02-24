@@ -191,6 +191,10 @@ library
         , PE.STLetList
         , TypeSafeObservableSharing.Class
         , TypeSafeObservableSharing.BitGraph
+        , TypeSafeObservableSharing.StableName
+        , DirectoryMerging
+        , Trie.Trie
+        , Trie.TrieMap
 
 
     -- Modules included in this library but not exported.
