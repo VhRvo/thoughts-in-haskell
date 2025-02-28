@@ -9,7 +9,6 @@ main = do
   print int
   sn2 <- makeStableName int -- (int `seq` int)
   print (sn1 == sn2) -- True
---   let int2 = 1 :: Int
---   sn' <- makeStableName int2
---   print (sn1 == sn') -- False
-
+  --   let int2 = 1 :: Int
+  --   sn' <- makeStableName int2
+  --   print (sn1 == sn') -- False

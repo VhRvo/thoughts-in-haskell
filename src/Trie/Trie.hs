@@ -3,8 +3,8 @@
 
 module Trie.Trie where
 
+import Data.Map.Strict qualified as M
 import Data.Maybe
-import qualified Data.Map.Strict as M
 
 data Trie a
   = Node !(Maybe [a]) !(M.Map a (Trie a))

@@ -9,6 +9,3 @@ class MuRef a where
     (a -> f u) ->
     a ->
     f (DeRef a u)
-
-
-

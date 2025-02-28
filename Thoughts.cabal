@@ -195,6 +195,7 @@ library
         , DirectoryMerging
         , Trie.Trie
         , Trie.TrieMap
+        , ParserCombinator.Simple
 
 
     -- Modules included in this library but not exported.
