@@ -23,8 +23,3 @@ type Parser2 = String -> (Tree, String)
 type Parser output = String -> [(output, String)]
 
 -- type Parser input output = input -> [(output, input)]
-
-
-
-
-

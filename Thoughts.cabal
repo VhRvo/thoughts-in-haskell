@@ -196,6 +196,11 @@ library
         , Trie.Trie
         , Trie.TrieMap
         , ParserCombinator.Simple
+        , NoNestedBracket.GADT
+        , NoNestedBracket.Fix
+        , Infer.Syntax
+        , Infer.ExplicitSubstitution.Substitution
+        , Infer.ExplicitSubstitution.Substitutable
 
 
     -- Modules included in this library but not exported.

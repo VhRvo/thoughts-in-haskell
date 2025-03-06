@@ -71,3 +71,5 @@ So, a leap of faith, we define `comp s1 s2 = fmap (subst s1) s2 `union` s1`!
 
 > comp :: Substitution -> Substitution -> Substitution
 > comp s1 s2 = fmap (subst s1) s2 `Map.union` s1
+
+
