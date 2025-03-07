@@ -57,8 +57,10 @@ infer = \case
       Just tpe -> do
         (mempty,) <$> instantiate tpe
   ELambda id body -> do
-    unknown <- emptyGeneralize <$> fresh
-    Reader.local (insert id unknown) (infer body)
+    argT <- fresh
+    let gArgT = emptyGeneralize argT
+    (s1, bodyT) <- Reader.local (insert id gArgT) (infer body)
+    pure (s1, apply s1 argT `TArrow` bodyT)
   EApplication fun arg -> do
     retT <- fresh
     (s1, funT) <- infer fun
@@ -68,7 +70,8 @@ infer = \case
   ELet id rhs body -> do
     (s1, rhsT) <- infer rhs
     rhsT' <- generalize rhsT
-    Reader.local (insert id rhsT' . apply s1) (infer body)
+    (s2, bodyT) <- Reader.local (insert id rhsT' . apply s1) (infer body)
+    pure (s2 <> s1, bodyT)
   ELiteral literal -> do
     case literal of
       LInteger _ -> pure (mempty, TInteger)
