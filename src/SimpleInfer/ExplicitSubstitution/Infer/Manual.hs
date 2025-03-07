@@ -1,6 +1,6 @@
 {-# LANGUAGE StrictData #-}
 
-module Infer.ExplicitSubstitution.Infer.Manual where
+module SimpleInfer.ExplicitSubstitution.Infer.Manual where
 
 import Control.Monad.Except
 import Control.Monad.Reader
@@ -11,9 +11,9 @@ import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
-import Infer.ExplicitSubstitution.Substitution
-import Infer.Syntax
-import Infer.TypeEnv
+import SimpleInfer.ExplicitSubstitution.Substitution
+import SimpleInfer.Syntax
+import SimpleInfer.TypeEnv
 import Prelude hiding (id, lookup)
 import Prelude qualified as P
 

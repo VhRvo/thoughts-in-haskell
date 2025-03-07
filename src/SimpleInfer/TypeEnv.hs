@@ -1,9 +1,9 @@
-module Infer.TypeEnv where
+module SimpleInfer.TypeEnv where
 
 import Data.Coerce
 import Data.Map (Map)
 import Data.Map qualified as Map
-import Infer.Syntax
+import SimpleInfer.Syntax
 import Prelude hiding (id)
 
 newtype TypeEnv = TypeEnv (Map Identifier Type)

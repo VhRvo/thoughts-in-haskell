@@ -1,4 +1,4 @@
-module Infer.ExplicitSubstitution.Substitution where
+module SimpleInfer.ExplicitSubstitution.Substitution where
 
 import Data.Coerce
 import Data.Map (Map)
@@ -7,8 +7,8 @@ import Data.Set (Set)
 import Data.Set qualified as Set
 import Data.Text (Text)
 import Data.Text qualified as T
-import Infer.Syntax
-import Infer.TypeEnv
+import SimpleInfer.Syntax
+import SimpleInfer.TypeEnv
 
 newtype Substitution
   = Substitution (Map Identifier Type)

@@ -201,8 +201,11 @@ library
         , Infer.Syntax
         , Infer.TypeEnv
         , Infer.ExplicitSubstitution.Substitution
-        -- , Infer.ExplicitSubstitution.Substitutable
         , Infer.ExplicitSubstitution.Infer.Manual
+        , SimpleInfer.Syntax
+        , SimpleInfer.TypeEnv
+        , SimpleInfer.ExplicitSubstitution.Substitution
+        , SimpleInfer.ExplicitSubstitution.Infer.Manual
 
 
     -- Modules included in this library but not exported.
