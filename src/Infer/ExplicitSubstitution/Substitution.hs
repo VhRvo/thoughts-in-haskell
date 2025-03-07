@@ -12,12 +12,16 @@ import Infer.TypeEnv
 
 newtype Substitution
   = Substitution (Map Identifier Type)
+  deriving (Show)
 
 singleton :: Identifier -> Type -> Substitution
 singleton = coerce (Map.singleton @_ @Type)
 
 findWithDefault :: Type -> Identifier -> Substitution -> Type
-findWithDefault = coerce (Map.findWithDefault @Identifier @Type)
+findWithDefault = coerce (Map.findWithDefault @_ @Type)
+
+fromList :: [(Identifier, Type)] -> Substitution
+fromList = coerce (Map.fromList @_ @Type)
 
 instance Semigroup Substitution where
   (<>) :: Substitution -> Substitution -> Substitution
@@ -51,6 +55,15 @@ instance Substitutable Type where
       TArrow
         (apply substitution input)
         (apply substitution output)
+
+instance Substitutable Scheme where
+  freeVars :: Scheme -> Set Identifier
+  freeVars (Scheme ids tpe) =
+    Set.difference (Set.fromList ids) (freeVars tpe)
+
+  apply :: Substitution -> Scheme -> Scheme
+  apply substitution (Scheme ids tpe) =
+    Scheme ids (apply substitution tpe)
 
 instance Substitutable TypeEnv where
   freeVars :: TypeEnv -> Set Identifier

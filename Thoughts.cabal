@@ -198,14 +198,15 @@ library
         , ParserCombinator.Simple
         , NoNestedBracket.GADT
         , NoNestedBracket.Fix
-        , Infer.Syntax
-        , Infer.TypeEnv
-        , Infer.ExplicitSubstitution.Substitution
-        , Infer.ExplicitSubstitution.Infer.Manual
         , SimpleInfer.Syntax
         , SimpleInfer.TypeEnv
         , SimpleInfer.ExplicitSubstitution.Substitution
         , SimpleInfer.ExplicitSubstitution.Infer.Manual
+        , Infer.Syntax
+        , Infer.TypeEnv
+        , Infer.ExplicitSubstitution.Substitution
+        , Infer.ExplicitSubstitution.Infer.Manual
+        , Infer.Test
 
 
     -- Modules included in this library but not exported.

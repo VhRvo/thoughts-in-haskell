@@ -1,7 +1,6 @@
 module Infer.Syntax where
 
 import Data.Text (Text)
-import Data.Text qualified as T
 
 type Identifier = Text
 
@@ -11,6 +10,7 @@ data Expr
   | EApplication Expr Expr
   | ELet Identifier Expr Expr
   | ELiteral Literal
+  --   | EFix Identifier Expr
   deriving (Eq, Ord, Show)
 
 data Literal
