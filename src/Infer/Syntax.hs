@@ -22,8 +22,20 @@ data Literal
 --   = TConstant
 --   | TVariable Identifier
 --   | TApplication Type Type
+
+-- data TypeF r
+--   = TConstant
+--   | TVariable Identifier
+--   | TApplication r r
+
+-- data UnknownF f r
+--   = Known (f (UnknownF f r))
+--   | Unknown Identifier
+
+-- actually type variables is unknown values,
+-- we do not know it now, but it will be known.
 data Type
-  = TBool
+  = TBoolean
   | TInteger
   | TVariable Identifier
   | TArrow Type Type

@@ -199,8 +199,10 @@ library
         , NoNestedBracket.GADT
         , NoNestedBracket.Fix
         , Infer.Syntax
+        , Infer.TypeEnv
         , Infer.ExplicitSubstitution.Substitution
-        , Infer.ExplicitSubstitution.Substitutable
+        -- , Infer.ExplicitSubstitution.Substitutable
+        , Infer.ExplicitSubstitution.Infer.Manual
 
 
     -- Modules included in this library but not exported.

@@ -1,6 +1,8 @@
 module Infer.ExplicitSubstitution.Substitutable where
 
-class Substitutable a where
-    freeVars :: a -> Set Identifier
-    apply :: Substitution -> a -> a
-
+-- import Data.Map
+import Data.Map qualified as Map
+import Data.Set
+import Data.Set qualified as Set
+-- import Infer.ExplicitSubstitution.Substitution
+import Infer.Syntax
