@@ -59,6 +59,10 @@ class SemiRing a where
   add :: a -> a -> a
   mul :: a -> a -> a
 
+data Electronic = EZQ2'0 | EZQ1'0
+
+data Version = Version Int Int
+
 data Expr
   = Var Text
   | Int Int

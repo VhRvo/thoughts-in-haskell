@@ -103,10 +103,13 @@ bind id tpe
   | occurCheck id tpe = throwError "infinite type"
   | otherwise = pure (singleton id tpe)
 
+-- The instantiation function replaces all bound type variables
+-- in a type scheme with fresh type variables.
 instantiate :: Scheme -> Infer TypeEnv Text Type
 instantiate (Scheme vars tpe) = do
-  unknowns <- traverse (const fresh) vars
-  let s1 = fromList (zip vars unknowns)
+  s1 <- fromList <$> traverse (\var -> (var,) <$> fresh) vars
+  -- unknowns <- traverse (const fresh) vars
+  -- let s1 = fromList (zip vars unknowns)
   pure (apply s1 tpe)
 
 generalize :: Type -> Infer TypeEnv Text Scheme

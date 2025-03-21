@@ -207,6 +207,14 @@ library
         , Infer.ExplicitSubstitution.Substitution
         , Infer.ExplicitSubstitution.Infer.Manual
         , Infer.Test
+        , Staging.One
+        , Staging.Two
+        , NbE.Reconstructing.Eval
+        , NbE.Reconstructing.Choice11
+        , NbE.Reconstructing.Choice12
+        , NbE.Reconstructing.Choice2
+        , NbE.Reconstructing.Choice3
+        , NbE.Reconstructing.Choice3ing
 
 
     -- Modules included in this library but not exported.
@@ -274,6 +282,7 @@ library
       , logict
       , quickcheck-instances
       , hashtables
+      , template-haskell
 
     -- Directories containing source files.
     hs-source-dirs:   src

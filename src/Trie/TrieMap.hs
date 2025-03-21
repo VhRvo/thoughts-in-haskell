@@ -1,8 +1,16 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TupleSections #-}
+
 module Trie.TrieMap where
 
+import Data.Bifunctor (Bifunctor (first))
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
-import Prelude hiding (lookup)
+import Data.Maybe (maybeToList)
+import Data.Sequence (Seq)
+import Data.Sequence qualified as Seq
+import Prelude hiding (Traversable (..), lookup)
+import Prelude qualified as P
 
 -- import Data.Text (Text)
 -- import Data.Text qualified as T
@@ -20,13 +28,13 @@ alter f = go
   where
     go prefixes trie = case prefixes of
       [] -> trie {value = f (value trie)}
-      key : rest ->
+      key : restPrefixes ->
         trie
           { children =
               Map.alter
                 ( Just . \case
-                    Nothing -> alterFromEmpty f prefixes
-                    Just matched -> go rest matched
+                    Nothing -> alterFromEmpty f restPrefixes
+                    Just matched -> go restPrefixes matched
                 )
                 key
                 (children trie)
@@ -34,6 +42,40 @@ alter f = go
 
 insert :: (Ord k) => [k] -> a -> TrieMap k a -> TrieMap k a
 insert prefixes value = alter (const (Just value)) prefixes
+
+insert' :: forall k a. (Ord k) => [k] -> TrieMap k a -> TrieMap k a -> TrieMap k a
+insert' prefixes' value = go prefixes'
+  where
+    go :: [k] -> TrieMap k a -> TrieMap k a
+    go prefixes trie = case prefixes of
+      [] -> value `union` trie
+      key : restPrefixes ->
+        trie
+          { children =
+              Map.alter
+                ( Just . \case
+                    Nothing -> value
+                    Just matched -> go restPrefixes matched
+                )
+                key
+                (children trie)
+          }
+
+-- alter' :: (Ord k) => (Maybe (TrieMap k a) -> Maybe (TrieMap k a)) -> [k] -> TrieMap k a -> TrieMap k a
+-- alter' f = go
+--   where
+--     go prefixes trie = case prefixes of
+--       [] -> trie { value =  f (value trie)}
+--       key : restPrefixes ->
+--         trie
+--           {
+--             children =
+--               Map.alter
+
+--           }
+
+-- insertTrieMap :: (Ord k) => [k] -> TrieMap k a -> TrieMap k a -> TrieMap k a
+-- insertTrieMap prefixes value
 
 delete :: (Ord k) => [k] -> TrieMap k a -> TrieMap k a
 delete = alter (const Nothing)
@@ -60,9 +102,9 @@ delete = alter (const Nothing)
 walk :: (Ord k) => [k] -> TrieMap k a -> Maybe (TrieMap k a)
 walk prefixes trie = case prefixes of
   [] -> Just trie
-  key : rest ->
+  key : restPrefixes ->
     Map.lookup key (children trie)
-      >>= walk rest
+      >>= walk restPrefixes
 
 lookup :: (Ord k) => [k] -> TrieMap k a -> Maybe a
 lookup prefixes trie = walk prefixes trie >>= value
@@ -89,3 +131,84 @@ alterFromEmpty f =
   foldr
     (\key acc -> Node Nothing (Map.singleton key acc))
     (Node (f Nothing) Map.empty)
+
+unionWith :: (Ord k) => (a -> a -> a) -> TrieMap k a -> TrieMap k a -> TrieMap k a
+unionWith = undefined
+
+union :: (Ord k) => TrieMap k a -> TrieMap k a -> TrieMap k a
+union left = foldr (\(prefixes, value) acc -> insert prefixes value acc) left . toList
+
+traverse :: (Ord k, Applicative f) => (a -> f b) -> TrieMap k a -> f (TrieMap k b)
+traverse f = go
+  where
+    go trie =
+      ( case value trie of
+          Nothing -> pure (Node Nothing)
+          Just value' -> Node . Just <$> f value'
+      )
+        <*> P.traverse go (children trie)
+
+-- depth-first search
+traverseWithKey :: (Ord k, Applicative f) => ([k] -> a -> f b) -> TrieMap k a -> f (TrieMap k b)
+traverseWithKey f trie =
+  ( case value trie of
+      Nothing -> pure (Node Nothing)
+      Just value' -> Node . Just <$> f [] value'
+  )
+    <*> Map.traverseWithKey
+      (\key child -> traverseWithKey (\prefixes -> f (key : prefixes)) child)
+      (children trie)
+
+toList :: TrieMap k a -> [([k], a)]
+toList (Node value children) =
+  let
+    recursed = Map.toList $ toList <$> children
+    flattened = concatMap (\(key, childrenList) -> first (key :) <$> childrenList) recursed
+   in
+    maybeToList (([],) <$> value) <> flattened
+
+fromList :: (Ord k) => [([k], a)] -> TrieMap k a
+fromList = foldr (\(key, value) acc -> insert key value acc) empty
+
+fromToListTest :: IO ()
+fromToListTest = do
+  let trie = fromList @Int @Int [([1, 2, 3], 3), ([1, 2], 4), ([2, 3, 5], 6)]
+  print trie
+  print (toList trie)
+
+traverseWithKeyTest :: IO ()
+traverseWithKeyTest = do
+  let trie = fromList @Int @Int [([], 1), ([1], 2), ([5], 6), ([1, 2, 3], 3), ([1, 2], 4), ([2, 3, 5], 6)]
+  traversed1 <-
+    traverseWithKey
+      ( \prefixes value -> do
+          print prefixes
+          print value
+          pure (prefixes, value)
+      )
+      trie
+  traversed2 <-
+    traverse
+      ( \value -> do
+          print value
+          pure value
+      )
+      trie
+  print traversed1
+  print traversed2
+  pure ()
+
+unionTest :: IO ()
+unionTest = do
+  let bigTrie = fromList [([9, 8, 7], 2)]
+  let trie = fromList @Int @Int [([], 1), ([1], 2), ([5], 6), ([1, 2, 3], 3), ([1, 2], 4), ([2, 3, 5], 6)]
+  let bigTrie' = insert' [9, 8] trie bigTrie
+  print (toList bigTrie')
+
+insert'Test :: IO ()
+insert'Test = do
+  let bigTrie = fromList [([9, 8, 7], 2)]
+  let trie = fromList @Int @Int [([], 1), ([1], 2), ([5], 6), ([1, 2, 3], 3), ([1, 2], 4), ([2, 3, 5], 6)]
+  let bigTrie' = insert' [9, 8] trie bigTrie
+  print (toList bigTrie')
+
