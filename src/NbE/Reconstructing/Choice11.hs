@@ -1,9 +1,9 @@
 module NbE.Reconstructing.Choice11 where
 
 import Control.Monad.Except
-import Control.Monad.State
 import Control.Monad.Reader
-import qualified Control.Monad.Reader as R
+import Control.Monad.Reader qualified as R
+import Control.Monad.State
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe
@@ -45,7 +45,7 @@ newtype Interpreter a
 newVar :: Interpreter Text
 newVar = do
   index <- get
-  modify' (+1)
+  modify' (+ 1)
   pure . T.pack $ "x" <> show index
 
 eval :: Expr -> Interpreter Value
@@ -91,7 +91,3 @@ readBackNeutral = \case
     rf <- readBackNeutral neutral
     ra <- readBackValue value
     pure (EApp rf ra)
-
-
-
-

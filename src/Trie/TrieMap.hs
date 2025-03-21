@@ -211,4 +211,3 @@ insert'Test = do
   let trie = fromList @Int @Int [([], 1), ([1], 2), ([5], 6), ([1, 2, 3], 3), ([1, 2], 4), ([2, 3, 5], 6)]
   let bigTrie' = insert' [9, 8] trie bigTrie
   print (toList bigTrie')
-

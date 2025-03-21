@@ -2,7 +2,7 @@ module NbE.Reconstructing.Eval where
 
 import Control.Monad.Except
 import Control.Monad.Reader
-import qualified Control.Monad.Reader as R
+import Control.Monad.Reader qualified as R
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe
@@ -50,6 +50,3 @@ eval = \case
         v <- eval e2
         f v
       _ -> throwError "not a function in application"
-
-
-

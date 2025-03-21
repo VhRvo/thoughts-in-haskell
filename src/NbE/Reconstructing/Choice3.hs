@@ -1,9 +1,9 @@
 module NbE.Reconstructing.Choice3 where
 
 import Control.Monad.Except
-import Control.Monad.State
 import Control.Monad.Reader
-import qualified Control.Monad.Reader as R
+import Control.Monad.Reader qualified as R
+import Control.Monad.State
 import Data.Map (Map)
 import Data.Map qualified as Map
 import Data.Maybe
@@ -53,14 +53,14 @@ newtype Interpreter a
 
 runInterpreter :: Interpreter a -> Env -> Int -> Either Text a
 runInterpreter (Interpreter interpreter) env state =
-  (`evalStateT` state) .
-  (`runReaderT` env) $
-  interpreter
+  (`evalStateT` state)
+    . (`runReaderT` env)
+    $ interpreter
 
 newVar :: Interpreter Variable
 newVar = do
   index <- get
-  modify' (+1)
+  modify' (+ 1)
   pure . T.pack $ "x" <> show index
 
 eval :: Expr -> Interpreter Value
@@ -111,11 +111,12 @@ reify tpe value = case (tpe, value) of
 
 test :: IO ()
 test = do
-  let t1 = TArrow (TBase "") (TBase "")
-      t2 = TArrow t1 t1
-      t3 = TArrow t2 t2
-      expr = ELam "hof" (ELam "f" (EApp (EVar "hof") (EVar "f")))
-      reified = reify t3 =<< eval expr
-      result = runInterpreter reified Map.empty 0
+  let
+    t1 = TArrow (TBase "") (TBase "")
+    t2 = TArrow t1 t1
+    t3 = TArrow t2 t2
+    expr = ELam "hof" (ELam "f" (EApp (EVar "hof") (EVar "f")))
+    reified = reify t3 =<< eval expr
+    result = runInterpreter reified Map.empty 0
   print result
   pure ()
