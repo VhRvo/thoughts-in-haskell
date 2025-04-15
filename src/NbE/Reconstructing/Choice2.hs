@@ -110,8 +110,8 @@ reflect tpe neutral = case tpe of
     pure
       ( VLam
           ( \input -> do
-              ra <- reify argT input
-              reflect resT (NApp neutral ra)
+              argN <- reify argT input
+              reflect resT (NApp neutral argN)
           )
       )
 

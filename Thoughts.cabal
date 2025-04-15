@@ -182,6 +182,7 @@ library
         , StInReaderT.Existential
         , StInReaderT.TypeSynonym
         , FingerTree.Monoid
+        , Memorize.YCombinator
         , Memorize.ST
         , NbE.Closed
         , NbE.Untyped
@@ -215,6 +216,7 @@ library
         , NbE.Reconstructing.Choice2
         , NbE.Reconstructing.Choice3
         , NbE.Reconstructing.Choice3ing
+        , ZXCalculus
 
 
     -- Modules included in this library but not exported.
