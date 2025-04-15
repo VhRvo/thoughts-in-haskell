@@ -3,20 +3,24 @@ module Memorize.YCombinator where
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 
--- import
-
 y1 :: (a -> a) -> a
 y1 f = f (y1 f)
 
 y2 :: ((a -> b) -> (a -> b)) -> (a -> b)
 y2 f = f (\x -> y2 f x)
 
-y3 :: ((a -> state -> (state, b)) -> (a -> state -> (state, b))) -> 
-    (a -> state -> (state, b))
+y3 ::
+  ((a -> state -> (state, b)) -> (a -> state -> (state, b))) ->
+  (a -> state -> (state, b))
 y3 f = f (\x state -> y3 f x state)
 
-y4 :: (Ord a) => 
-((a -> Map a b -> (Map a b, b)) -> (a -> Map a b -> (Map a b, b))) -> (a -> Map a b -> (Map a b, b))
+-- y: memo
+y4 ::
+  (Ord a) =>
+  ( (a -> Map a b -> (Map a b, b)) ->
+    (a -> Map a b -> (Map a b, b))
+  ) ->
+  (a -> Map a b -> (Map a b, b))
 y4 f =
   f
     ( \x memo ->
@@ -27,7 +31,67 @@ y4 f =
           Just result -> (memo, result)
     )
 
-y5 :: (Ord k) => (a -> key) -> 
-    ((a -> Map k b -> (Map k b, b)) -> (a -> Map k b -> (Map k b, b))) -> 
-        (a -> Map k b -> (Map k b, b))
-y5 key f = f (y5 key f)
+-- y: key
+y5 ::
+  (Ord k) =>
+  (a -> k) ->
+  ( (a -> Map k b -> (Map k b, b)) ->
+    (a -> Map k b -> (Map k b, b))
+  ) ->
+  (a -> Map k b -> (Map k b, b))
+y5 key f =
+  f
+    ( \x memo ->
+        let keyX = key x
+         in case Map.lookup keyX memo of
+              Nothing ->
+                let (memo', result) = y5 key f x memo
+                 in (Map.insert keyX result memo', result)
+              Just result -> (memo, result)
+    )
+
+-- y: multiple tables
+y6 ::
+  (Ord k) =>
+  (a -> k, tables -> Map k b, Map k b -> tables -> tables) ->
+  ( (a -> tables -> (tables, b)) ->
+    (a -> tables -> (tables, b))
+  ) ->
+  (a -> tables -> (tables, b))
+y6 (key, get, set) f =
+  f
+    ( \x tables ->
+        let
+          keyX = key x
+          table = get tables
+         in
+          case Map.lookup keyX table of
+            Nothing ->
+              let (tables', result) = y6 (key, get, set) f x tables
+               in (set (Map.insert keyX result table) tables', result)
+            Just result ->
+              (tables, result)
+    )
+
+-- y: cps
+y7 ::
+  (Ord k) =>
+  (a -> k, tables -> Map k b, Map k b -> tables -> tables) ->
+  ( (a -> tables -> ((tables, b) -> c) -> c) ->
+    (a -> tables -> ((tables, b) -> c) -> c)
+  ) ->
+  (a -> tables -> ((tables, b) -> c) -> c)
+y7 (key, get, set) f =
+  f
+    ( \x tables k ->
+        let
+          keyX = key x
+          table = get tables
+         in
+          case Map.lookup keyX table of
+            Nothing ->
+              y7 (key, get, set) f x tables $ \(tables', result) ->
+                k (set (Map.insert keyX result table) tables', result)
+            Just result ->
+              k (tables, result)
+    )

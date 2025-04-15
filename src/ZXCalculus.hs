@@ -1,42 +1,41 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# OPTIONS_GHC -freduction-depth=0 -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use camelCase" #-}
-{-# LANGUAGE GADTs #-}
 {-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE TypeApplications #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# HLINT ignore "Use camelCase" #-}
+{-# LANGUAGE GADTs #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# OPTIONS_GHC -freduction-depth=0 -Wno-unrecognised-pragmas #-}
 
 module ZXCalculus where
 
-import GHC.TypeLits
-import Data.Proxy
 import Data.Kind
-
+import Data.Proxy
+import GHC.TypeLits
 import Unsafe.Coerce
 
 type Phase = Int
 
 data ZX :: Nat -> Nat -> Type where
-  Empty     :: ZX 0 0
-  Cup       :: ZX 0 2
-  Cap       :: ZX 2 0
-  Swap      :: ZX 2 2
-  Wire      :: ZX 1 1
-  Box       :: ZX 1 1
-  X_Spider  :: Phase -> ZX n m
-  Z_Spider  :: Phase -> ZX n m
-  Stack     :: ZX n0 m0 -> ZX n1 m1 -> ZX (n0 + n1) (m0 + m1)
+  Empty :: ZX 0 0
+  Cup :: ZX 0 2
+  Cap :: ZX 2 0
+  Swap :: ZX 2 2
+  Wire :: ZX 1 1
+  Box :: ZX 1 1
+  X_Spider :: Phase -> ZX n m
+  Z_Spider :: Phase -> ZX n m
+  Stack :: ZX n0 m0 -> ZX n1 m1 -> ZX (n0 + n1) (m0 + m1)
   -- StackN     :: n ZX n0 m0 -> ZX n1 m1 -> ZX (n0 + n1) (m0 + m1)
-  Compose   :: ZX n m -> ZX m o -> ZX n o
-  -- deriving (Show)
+  Compose :: ZX n m -> ZX m o -> ZX n o
 
+-- deriving (Show)
 
 -- stack_n :: forall t m1 m2 n1 n2. (KnownNat t, KnownNat (Pred t), Mul t m1 ~ m2, Mul t n1 ~ n2) => Proxy t -> ZX n1 m1 -> ZX n2 m2
 -- stack_n proxy zx
@@ -53,18 +52,26 @@ instance {-# OVERLAPPING #-} (n2 ~ n1, m2 ~ m1) => StackN 1 n1 m1 n2 m2 where
   stackN _ zx = zx
 
 -- Recursive case: t > 1
-instance {-# OVERLAPPABLE #-} (KnownNat t,
-          t ~ (1 + s),
-          s ~ (t - 1),
-          StackN s n1 m1 ns ms,
-          n2 ~ (n1 + ns), m2 ~ (m1 + ms))
-       => StackN t n1 m1 n2 m2 where
+instance
+  {-# OVERLAPPABLE #-}
+  ( KnownNat t,
+    t ~ (1 + s),
+    s ~ (t - 1),
+    StackN s n1 m1 ns ms,
+    n2 ~ (n1 + ns),
+    m2 ~ (m1 + ms)
+  ) =>
+  StackN t n1 m1 n2 m2
+  where
   stackN _ zx = Stack zx (stackN (Proxy @s) zx)
 
 -- Wrapper function with nicer type
-stack_n :: forall t n1 m1 n2 m2.
-           (KnownNat t, StackN t n1 m1 n2 m2)
-        => Proxy t -> ZX n1 m1 -> ZX n2 m2
+stack_n ::
+  forall t n1 m1 n2 m2.
+  (KnownNat t, StackN t n1 m1 n2 m2) =>
+  Proxy t ->
+  ZX n1 m1 ->
+  ZX n2 m2
 stack_n = stackN @t
 
 n_wires :: forall n. (KnownNat n, StackN n 1 1 n n) => Proxy n -> ZX n n
@@ -146,7 +153,7 @@ demo = n_wires (Proxy :: Proxy 345)
 -- o_copy_r a zx@(Stack z@(Z_Spider 0) z2) = if is_stacked zx (== z) then Compose z1 (X_Spider a) else zx
 -- o_copy_r _ zx = zx
 type family Pred (n :: Nat) :: Nat where
-  Pred 0 = 0  -- 确保 0 的情况
+  Pred 0 = 0 -- 确保 0 的情况
   Pred n = n - 1
 
 type family Mul (a :: Nat) (b :: Nat) :: Nat where
@@ -158,9 +165,6 @@ type family Mul (a :: Nat) (b :: Nat) :: Nat where
 
 cast_zx :: (n1 ~ n2, m1 ~ m2) => ZX n1 m1 -> ZX n2 m2
 cast_zx = id
-
-
-
 
 -- bi_algebra :: ZX 2 2 -> ZX 2 2
 -- bi_algebra zx@(Compose zx1 (Compose zx2 zx3)) =
