@@ -1,11 +1,15 @@
 module Memorize.ST where
 
-import Control.Monad.ST
-import Data.HashTable.ST.Basic
-import Data.STRef
+-- import Control.Monad.ST
+-- import Data.HashTable.ST.Basic
+-- import Data.STRef
 
--- memorize :: (Eq a, Hashable a) => ((a -> b) -> a -> b) -> ((a -> b) -> a -> b)
--- memorize factorial f x = do
+import Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+
+memorize :: (Ord a) => ((a -> b) -> (a -> b)) -> ((a -> Map a b -> (Map a b, b)) -> (a -> Map a b -> (Map a b, b)))
+memorize factorial f x memo =
+    undefined
 --   r <- readSTRef ref
 --   case r of
 --     Nothing -> do
