@@ -5,11 +5,12 @@ module Memorize.ST where
 -- import Data.STRef
 
 import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
+import Data.Map.Strict qualified as Map
 
 memorize :: (Ord a) => ((a -> b) -> (a -> b)) -> ((a -> Map a b -> (Map a b, b)) -> (a -> Map a b -> (Map a b, b)))
 memorize factorial f x memo =
-    undefined
+  undefined
+
 --   r <- readSTRef ref
 --   case r of
 --     Nothing -> do

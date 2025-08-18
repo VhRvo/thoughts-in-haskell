@@ -4,9 +4,11 @@ module BreadthFirst.Context where
 
 import BreadthFirst.Tree
 import Data.IORef (modifyIORef, newIORef, readIORef)
-import Data.List (unsnoc)
 import Data.Maybe (fromMaybe)
 import Prelude hiding (sequence, tail)
+
+unsnoc :: [a] -> Maybe ([a], a)
+unsnoc = foldr (\x -> Just . maybe ([], x) (\(~(a, b)) -> (x : a, b))) Nothing
 
 breadth' :: forall m a. (Applicative m) => (a -> m ()) -> Tree a -> m ()
 breadth' f root = go [root]

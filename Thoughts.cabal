@@ -52,11 +52,13 @@ extra-doc-files:    CHANGELOG.md
 -- extra-source-files:
 
 common warnings
-    ghc-options: -Wall
+    ghc-options: -Wall -Wincomplete-patterns -Wno-name-shadowing
 
 library
     -- Import common warning flags.
     import:           warnings
+
+    -- ghc-options: --enable-shared
 
     -- Modules exported by the library.
     exposed-modules:
@@ -217,6 +219,14 @@ library
         , NbE.Reconstructing.Choice3
         , NbE.Reconstructing.Choice3ing
         , ZXCalculus
+        , Infix
+        , Exception
+        , TestFFI
+        , Validation
+        , ValueRestriction
+        , Redis.Demo
+        , TwoLevelTypesAndParameterizedModules.BasicUnification
+        , TwoLevelTypesAndParameterizedModules.TwoLevel
 
 
     -- Modules included in this library but not exported.
@@ -285,6 +295,10 @@ library
       , quickcheck-instances
       , hashtables
       , template-haskell
+      , vector
+      , dlist
+      , validation
+      , hedis
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -292,14 +306,21 @@ library
     -- Base language which the package is written in.
     default-language: Haskell2010
 
-executable demo
-  build-depends:
-      base
-    , Thoughts
-  main-is: Main.hs
-  hs-source-dirs: app
+-- foreign-library mymodule
+--   type:                      native-shared
+--   build-depends:             base
+--   hs-source-dirs:            src
+-- --   exposed-modules:           TestFFI
+--   default-language:          Haskell2010
 
-  default-language: Haskell2010
+-- executable demo
+--   build-depends:
+--       base
+--     , Thoughts
+--   main-is: Main.hs
+--   hs-source-dirs: app
+
+--   default-language: Haskell2010
 
 test-suite Ideas-test
     -- Import common warning flags.

@@ -1,5 +1,4 @@
 -- https://welltypedwit.ch/posts/value-restriction.html
-
 {-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE ImpredicativeTypes #-}
 {-# LANGUAGE MagicHash #-}
@@ -50,16 +49,20 @@ instance Applicative (State s) where
   pure x = State (,x)
   (<*>) :: State s (a -> b) -> State s a -> State s b
   mf <*> mx = State $ \state ->
-    let (state', f) = runState mf state
-        (state'', x) = runState mx state'
-     in (state'', f x)
+    let
+      (state', f) = runState mf state
+      (state'', x) = runState mx state'
+     in
+      (state'', f x)
 
 instance Monad (State s) where
   (>>=) :: State s a -> (a -> State s b) -> State s b
   mx >>= f = State $ \state ->
-    let (state', x) = runState mx state
-        (result, state'') = runState (f x) state'
-     in (result, state'')
+    let
+      (state', x) = runState mx state
+      (result, state'') = runState (f x) state'
+     in
+      (result, state'')
 
 instance MonadGen (State s) where
   generalize :: forall f. (forall a. State s (f a)) -> State s (forall a. f a)
@@ -124,12 +127,14 @@ instance MonadGen IO where
   generalize m' =
     IO $ \state ->
       -- state :: State# RealWorld
-      let -- m :: State# RealWorld -> (# State# RealWorld, f a #)
-          IO m = m'
-          -- m :: forall a. State# RealWorld -> (# State# RealWorld, f a #)
-          (boxedState, result) = liftState (m state)
-          !(BoxedState state') = boxedState
-       in (# state', result #)
+      let
+        -- m :: State# RealWorld -> (# State# RealWorld, f a #)
+        IO m = m'
+        -- m :: forall a. State# RealWorld -> (# State# RealWorld, f a #)
+        (boxedState, result) = liftState (m state)
+        !(BoxedState state') = boxedState
+       in
+        (# state', result #)
 
 newtype MaybeRef a = MaybeRef {unMaybeRef :: IORef (Maybe a)}
 
