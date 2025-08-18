@@ -47,9 +47,9 @@ unifyType lhs rhs = do
         then pure ()
         else writeSTRef ptr (Just rhs)
     (MutVar ptr, _) ->
-      singleBind ptr rhs
+      bind ptr rhs
     (_, MutVar ptr) ->
-      singleBind ptr lhs
+      bind ptr lhs
     (GenVar index, GenVar index') ->
       if index == index'
         then pure ()
@@ -61,8 +61,8 @@ unifyType lhs rhs = do
     _ ->
       error "different types"
   where
-    singleBind :: Ptr a -> TypeExpr a -> ST a ()
-    singleBind ptr expr = do
+    bind :: Ptr a -> TypeExpr a -> ST a ()
+    bind ptr expr = do
       occured <- occursInType ptr expr
       if occured
         then error "occurs in"

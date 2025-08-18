@@ -7,8 +7,8 @@ module TwoLevelTypesAndParameterizedModules.TwoLevel where
 import Control.Monad.ST
 import Data.STRef
 import Data.Text (Text)
-import Prelude hiding (map)
-import qualified Effectful.Error.Dynamic as structure
+import Prelude hiding (map, seq)
+import Data.Foldable (traverse_)
 
 -- data TypeExpr a
 --   = MutVar (STRef a (Maybe (TypeExpr a)))
@@ -45,11 +45,11 @@ data GenericTerm s r
 
 type TypeExpr a = GenericTerm Structure (STRef a)
 
-pattern OperatorType' :: Text -> [GenericTerm Structure r] -> GenericTerm Structure r
-pattern OperatorType' operator types = Structure (OperatorType operator types)
+pattern POperatorType :: Text -> [GenericTerm Structure r] -> GenericTerm Structure r
+pattern POperatorType operator types = Structure (OperatorType operator types)
 
 operatorType :: Text -> [GenericTerm Structure r] -> GenericTerm Structure r
-operatorType = OperatorType'
+operatorType = POperatorType
 
 class Structurable structure where
   map :: forall a b. (a -> b) -> structure a -> structure b
@@ -106,13 +106,65 @@ prune expr =
 
 occursInType ::
   forall ref m structure.
-  (Reference ref m, Structurable structure, EqRef ref) =>
+  (EqRef ref, Reference ref m, Structurable structure) =>
   ref (Maybe (GenericTerm structure ref)) ->
   GenericTerm structure ref ->
   m Bool
-occursInType ptr expr =
+occursInType ptr expr = do
+  expr <- prune expr
   case expr of
     MutVar ptr' -> pure (sameRef ptr ptr')
     GenVar _ -> pure False
     Structure structure ->
-      undefined
+      (\result -> acc (||) result False)
+        <$> seq (map (occursInType ptr) structure)
+
+unifyType ::
+  forall ref structure m.
+  (EqRef ref, Reference ref m, Structurable structure) =>
+  GenericTerm structure ref ->
+  GenericTerm structure ref ->
+  m ()
+unifyType lhs rhs = do
+  lhs <- prune lhs
+  rhs <- prune rhs
+  case (lhs, rhs) of
+    (MutVar ptr, MutVar ptr') ->
+      if sameRef ptr ptr'
+        then pure ()
+        else writeRef ptr (Just rhs)
+    (MutVar ptr, _) ->
+      bind ptr rhs
+    (_, MutVar ptr) ->
+      bind ptr rhs
+    (GenVar index, GenVar index') ->
+      if index == index'
+        then pure ()
+        else error "different generic variables"
+    (Structure lhs', Structure rhs') ->
+      case match lhs' rhs' of
+        Nothing -> error "different constructors"
+        Just pairs -> traverse_ (uncurry unifyType) pairs
+    _ -> error "different constructors"
+  where
+    bind ::
+      ref (Maybe (GenericTerm structure ref)) ->
+      GenericTerm structure ref ->
+      m ()
+    bind ptr expr = do
+      occured <- occursInType ptr expr
+      if occured
+        then error "occured"
+        else writeRef ptr (Just expr)
+
+instance EqRef (STRef s) where
+  sameRef :: STRef s a -> STRef s a -> Bool
+  sameRef = (==)
+
+instance Reference (STRef s) (ST s) where
+  newRef :: a -> ST s (STRef s a)
+  newRef = newSTRef
+  readRef :: STRef s a -> ST s a
+  readRef = readSTRef
+  writeRef :: STRef s a -> a -> ST s ()
+  writeRef = writeSTRef
