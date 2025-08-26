@@ -1,6 +1,10 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Avoid lambda" #-}
+
 module PHOAS.PLambda where
+
+import Data.Function
 
 data BinaryOp
   = Add
@@ -14,9 +18,11 @@ data PLambda a
   | If (PLambda a) (PLambda a) (PLambda a)
   | Binary BinaryOp (PLambda a) (PLambda a)
   | Lam (a -> PLambda a)
+  | Mu1 (a -> PLambda a)
+  | Mu2 ([a] -> [PLambda a])
   | App (PLambda a) (PLambda a)
 
-newtype Lambda = Hide { reveal :: forall a. PLambda a }
+newtype Lambda = Hide {reveal :: forall a. PLambda a}
 
 data Value
   = VInt Int
@@ -43,13 +49,25 @@ eval expr = eval' (reveal expr)
           _ -> error ""
       Binary op e1 e2 -> evalBinary op (eval' e1) (eval' e2)
       Lam f -> VFunction (\x -> eval' (f x))
+      -- In substitution, `Mu1 x. N` translates to `N [x := Mu1 x. N], i.e. `Mu1 x. N -> N [x := Mu1 x. N]`.
+      -- So, under evaluation, `eval (Mu1 x. N)` should be equal to `eval (N [x := Mu1 x. N])`.
+      -- Using PHOAS, `eval (Mu1 f)` should be equal to `eval (f (eval (Mu1 f)))`.
+      -- So, we define `eval (Mu1 f) = eval (f (eval (Mu1 f))).`
+      -- Expanding the definition, we get: `eval (Mu1 f) = eval (f (eval (Mu1 f))) = eval (f (eval (f (eval (Mu1 f)))))`.
+      -- This is a fixed point of `eval . f`.
+      --   Mu1 f -> eval' (f (eval' (Mu1 f)))
+      --   Mu1 f -> let r = eval' (f r) in r
+      Mu1 f -> fix (eval' . f)
+      --   Mu2 f -> head $ eval' (f (map eval' . f)
+      --   Mu2 f -> let r = map eval' (f r) in head r
+      Mu2 f -> head $ fix (map eval' . f)
       App e1 e2 ->
         case eval' e1 of
           VFunction f -> f (eval' e2)
           _ -> error ""
 
     evalBinary :: BinaryOp -> Value -> Value -> Value
-    evalBinary Add  (VInt lhs) (VInt rhs) = VInt (lhs + rhs)
+    evalBinary Add (VInt lhs) (VInt rhs) = VInt (lhs + rhs)
     evalBinary Mult (VInt lhs) (VInt rhs) = VInt (lhs * rhs)
     evalBinary Eq (VInt lhs) (VInt rhs) = VBool (lhs == rhs)
     evalBinary _ _ _ = error ""
@@ -59,5 +77,3 @@ test1 = Hide (App (Lam (\x -> Binary Add (Int 3) (Var x))) (Int 4))
 
 --- >>> show (eval test1)
 -- "7"
-
-
