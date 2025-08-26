@@ -227,6 +227,11 @@ library
         , Redis.Demo
         , TwoLevelTypesAndParameterizedModules.BasicUnification
         , TwoLevelTypesAndParameterizedModules.TwoLevel
+        , FreshLib.Fresh
+        , PHOAS.PLambda
+        , PHOAS.PStream
+        , PHOAS.PTree
+        , PHOAS.Rec
 
 
     -- Modules included in this library but not exported.

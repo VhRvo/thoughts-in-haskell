@@ -9,7 +9,7 @@ data PStream a v
   | Mu (v -> PStream a v)
   | Cons a (PStream a v)
 
-newtype Stream a = Hide { reveal :: forall v. PStream a v }
+newtype Stream a = Hide {reveal :: forall v. PStream a v}
 
 junk :: Stream a
 junk = Hide (Mu Var)
@@ -18,7 +18,7 @@ s1 :: Stream Int
 s1 = Hide (Cons 1 (Mu (\v -> Cons 2 (Var v))))
 
 s2 :: Stream Int
-s2 = Hide (Mu (\v -> Cons 1  Cons 2 (Var v)))
+s2 = Hide (Mu (\v -> Cons 1 (Cons 2 (Var v))))
 
 elems :: Stream a -> [a]
 elems stream = elems' (reveal stream)
@@ -46,6 +46,15 @@ foldStream combine initial stream = foldStream' (reveal stream)
       Mu f -> foldStream' (f initial)
       Cons a as -> combine a (foldStream' as)
 
+foldStream' :: forall a b. (a -> b -> b) -> b -> Stream a -> b
+foldStream' combine initial stream = fold (reveal stream)
+  where
+    fold :: PStream a () -> b
+    fold stream = case stream of
+      Var () -> initial
+      Mu f -> fold (f ())
+      Cons a as -> combine a (fold as)
+
 cfoldStream :: forall a b. (a -> b -> b) -> Stream a -> b
 cfoldStream combine = cfoldStream' . reveal
   where
@@ -72,10 +81,10 @@ instance (Eq a) => Eq (Stream a) where
   stream1 == stream2 = eq' 0 (reveal stream1) (reveal stream2)
     where
       eq' :: forall a. (Eq a) => Int -> PStream a Int -> PStream a Int -> Bool
-      eq' _ (Var x)     (Var y)     = x == y
-      eq' n (Mu f)      (Mu g)      = eq' (n + 1) (f n) (g n)
+      eq' _ (Var x) (Var y) = x == y
+      eq' n (Mu f) (Mu g) = eq' (n + 1) (f n) (g n)
       eq' n (Cons x xs) (Cons y ys) = x == y && eq' n xs ys
-      eq' _ _           _           = False
+      eq' _ _ _ = False
 
 returnPStream :: forall v a. v -> PStream a v
 returnPStream = Var
@@ -90,9 +99,10 @@ unrollStream :: Stream a -> Stream a
 unrollStream stream = Hide (joinPStream (unroll (reveal stream)))
   where
     unroll :: PStream a (PStream a v) -> PStream a (PStream a v)
-    unroll (Mu g)      = g (joinPStream (Mu g))
+    unroll (Mu g) = g (joinPStream (Mu g))
     unroll (Cons x xs) = Cons x (unroll xs)
-    unroll (Var _)     = error ""
+    unroll (Var _) = error ""
+
 -- tailStream :: Stream a -> Stream a
 -- tailStream stream = Hide (join ())
 
@@ -100,11 +110,13 @@ tailStream :: forall a. Stream a -> Stream a
 tailStream stream = Hide (joinPStream (tail (reveal stream)))
   where
     tail :: forall v. PStream a (PStream a v) -> PStream a (PStream a v)
-    tail (Var v)     = Var v
+    tail (Var v) = Var v
     tail (Cons _ xs) = xs
-    tail (Mu g)      = Mu (\x ->
-      let phead (Mu g)     = phead (g x)
-          phead (Cons y _) = y
-          phead (Var _)    = error ""
-       in tail (g (Cons (phead (g x)) x)))
-
+    tail (Mu g) =
+      Mu
+        ( \x ->
+            let phead (Mu g) = phead (g x)
+                phead (Cons y _) = y
+                phead (Var _) = error ""
+             in tail (g (Cons (phead (g x)) x))
+        )
