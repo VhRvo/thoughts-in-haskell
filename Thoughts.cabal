@@ -233,6 +233,7 @@ library
         , PHOAS.PTree
         , PHOAS.Rec
         , PHOAS.Grammar
+        , Bound.Naive
 
 
     -- Modules included in this library but not exported.

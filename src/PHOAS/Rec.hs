@@ -167,4 +167,3 @@ instance (Show a) => ShowF (TreeF a) where
   showF :: forall r a. (Show a) => (r -> String) -> TreeF a r -> String
   showF _ Empty = "Empty"
   showF show' (Fork x l r) = "Fork" <> show x <> "(" <> show' l <> ") <" <> show' r <> ")"
-

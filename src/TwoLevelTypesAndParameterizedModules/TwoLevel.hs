@@ -5,10 +5,10 @@ module TwoLevelTypesAndParameterizedModules.TwoLevel where
 -- import qualified Data.Text as T
 
 import Control.Monad.ST
+import Data.Foldable (traverse_)
 import Data.STRef
 import Data.Text (Text)
 import Prelude hiding (map, seq)
-import Data.Foldable (traverse_)
 
 -- data TypeExpr a
 --   = MutVar (STRef a (Maybe (TypeExpr a)))
@@ -168,3 +168,55 @@ instance Reference (STRef s) (ST s) where
   readRef = readSTRef
   writeRef :: STRef s a -> a -> ST s ()
   writeRef = writeSTRef
+
+data RSClass structure ref m
+  = RSClass
+  { sameRefRS :: forall a. ref a -> ref a -> Bool,
+    newVarRS :: forall a. a -> m (ref a),
+    writeRefRS :: forall a. ref a -> a -> m (),
+    readRefRS :: forall a. ref a -> m a,
+    seqRS :: forall a. structure (m a) -> m (structure a),
+    mapRS :: forall a b. (a -> b) -> structure a -> structure b,
+    accRS :: forall a b. (a -> b -> b) -> structure a -> b -> b,
+    matchRS :: forall a. structure a -> structure a -> Maybe [(a, a)],
+    errorRS :: forall a. Text -> m a
+  }
+
+-- data GTStruct structure ref m
+--   = B
+--   { unifyGT :: GenericTerm structure ref -> GenericTerm structure ref -> m ()
+--   , occursGT :: Ptr
+--   }
+
+newtype Extended s a = Extended {unExtended :: ST s (Either Text a)}
+
+runExtended :: forall a. (forall s. Extended s a) -> Either Text a
+runExtended extended = runST (unExtended extended)
+
+-- runExtended extended = let Extended x = extended in runST x
+
+instance Functor (Extended s) where
+  fmap :: (a -> b) -> Extended s a -> Extended s b
+  fmap f (Extended mx) = Extended (fmap (fmap f) mx)
+
+instance Applicative (Extended s) where
+  pure :: a -> Extended s a
+  pure = Extended . pure . pure
+  (<*>) :: Extended s (a -> b) -> Extended s a -> Extended s b
+  (<*>) (Extended f) (Extended mx) = Extended ((<*>) <$> f <*> mx)
+
+instance Monad (Extended s) where
+  (>>=) :: Extended s a -> (a -> Extended s b) -> Extended s b
+  (>>=) (Extended mx) f = Extended $ do
+    mx >>= \case
+      Left error -> pure (Left error)
+      Right x -> unExtended (f x)
+
+raise :: forall s a. Text -> Extended s a
+raise msg = Extended (pure (Left msg))
+
+handle :: forall s a. Extended s a -> Extended s a -> Extended s a
+handle (Extended mx) (Extended my) = Extended $ do
+  mx >>= \case
+    Left _ -> my
+    Right x -> pure (Right x)

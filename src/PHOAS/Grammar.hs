@@ -20,4 +20,3 @@ nullF pat = case pat of
 
 nullable :: Graph PatternF -> Bool
 nullable = sfold nullF False
-
