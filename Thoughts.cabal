@@ -234,6 +234,7 @@ library
         , PHOAS.Rec
         , PHOAS.Grammar
         , Bound.Naive
+        , Bound.DeBruijn
 
 
     -- Modules included in this library but not exported.
