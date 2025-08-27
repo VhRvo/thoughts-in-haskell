@@ -232,6 +232,7 @@ library
         , PHOAS.PStream
         , PHOAS.PTree
         , PHOAS.Rec
+        , PHOAS.Grammar
 
 
     -- Modules included in this library but not exported.

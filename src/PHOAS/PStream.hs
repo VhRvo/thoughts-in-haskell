@@ -52,7 +52,7 @@ foldStream' combine initial stream = fold (reveal stream)
     fold :: PStream a () -> b
     fold stream = case stream of
       Var () -> initial
-      Mu f -> fold (f ())
+      Mu g -> fold (g ())
       Cons a as -> combine a (fold as)
 
 cfoldStream :: forall a b. (a -> b -> b) -> Stream a -> b
