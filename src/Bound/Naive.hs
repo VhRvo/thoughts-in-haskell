@@ -118,9 +118,9 @@ lookup3 name (Map3 size map) =
 -- we need to prove the equalivalence between Map0 and Map3.
 -- I think we only need to prove the following theorem.
 
--- Map0=Map1 : forall name map0 map3. lookup0 name map0 = lookup3 name map3
+-- Map0=Map1 : forall map0 map3 name. lookup0 name map0 = lookup3 name map3
 
--- empty-same : forall name. Map0=Map1 name empty0 empty3
+-- empty-same : Map0=Map1 empty0 empty3
 -- and
 -- same-after-inserting : forall map0 map3 name value. Map0=Map1 map0 map3 -> Map0=Map1 (insert0 name map0) (insert3 name map3)
 
