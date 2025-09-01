@@ -235,6 +235,12 @@ library
         , PHOAS.Grammar
         , Bound.Naive
         , Bound.DeBruijn
+        , Bound.Nested1
+        , Bound.Scope1
+        , Bound.Scope2
+        , Bound.Scope3
+        , Bound.Scope3Demo
+        , Bound.Scope3Lambda
 
 
     -- Modules included in this library but not exported.

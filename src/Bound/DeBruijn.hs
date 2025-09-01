@@ -3,7 +3,7 @@
 module Bound.DeBruijn where
 
 import Data.Foldable
-import qualified Data.Foldable as Foldable
+import Data.Foldable qualified as Foldable
 import Data.Traversable
 
 newtype Scope f a = Scope (f a)
@@ -22,7 +22,7 @@ abstract me expr = Scope (letMeBound 0 expr)
     letMeBound this (Free you)
       | me == you = Bound this
       | otherwise = Free you
-    letMeBound this (Bound that) = Bound that
+    letMeBound _ (Bound that) = Bound that
     letMeBound this (App fun arg) = letMeBound this fun `App` letMeBound this arg
     letMeBound this (Lam (Scope body)) = letMeBound (succ this) body
 
@@ -31,8 +31,8 @@ instantiate what (Scope body) = what'sBound 0 body
   where
     what'sBound this (Bound that)
       | this == that = what
-      | otherwise    = Bound that
-    what'sBound _    (Free you) = Free you
+      | otherwise = Bound that
+    what'sBound _ (Free you) = Free you
     what'sBound this (App fun arg) = what'sBound this fun `App` what'sBound this arg
     what'sBound this (Lam (Scope body)) = Lam (Scope (what'sBound (succ this) body))
 
