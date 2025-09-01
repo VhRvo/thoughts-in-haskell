@@ -122,7 +122,7 @@ lookup3 name (Map3 size map) =
 
 -- empty-same : forall name. Map0=Map1 name empty0 empty3
 -- and
--- same-after-inserting : forall map0 map3 name value. Map0=Map1 name map0 map3 -> Map0=Map1 (insert0 name map0) (insert3 name map3)
+-- same-after-inserting : forall map0 map3 name value. Map0=Map1 map0 map3 -> Map0=Map1 (insert0 name map0) (insert3 name map3)
 
 -- I don't know how to prove theorem about Map.
 -- Maybe I should learn denotational semantics.
