@@ -23,7 +23,7 @@ debruijn env = \case
   App fun arg ->
     App (debruijn env fun) (debruijn env arg)
   Lam name body ->
-    debruijn (Map.insert name 0 (fmap (+ 1) env)) body
+    Lam name (debruijn (Map.insert name 0 (fmap (+ 1) env)) body)
 
 -- hesitating
 -- Is the following code consider cases where two names are the same?
@@ -37,7 +37,7 @@ debruijn' env = \case
   App fun arg ->
     App (debruijn' env fun) (debruijn' env arg)
   Lam name body ->
-    debruijn' (Map.insert name (length env) env) body
+    Lam name (debruijn' (Map.insert name (length env) env) body)
 
 -- the two algorithms can be unified to one algorithm
 -- where the difference is the map.
@@ -118,11 +118,11 @@ lookup3 name (Map3 size map) =
 -- we need to prove the equalivalence between Map0 and Map3.
 -- I think we only need to prove the following theorem.
 
--- Map0=Map1 : forall map0 map3 name. lookup0 name map0 = lookup3 name map3
+-- Map0=Map3 : forall map0 map3 name. lookup0 name map0 = lookup3 name map3
 
--- empty-same : Map0=Map1 empty0 empty3
+-- empty-same : Map0=Map3 empty0 empty3
 -- and
--- same-after-inserting : forall map0 map3 name value. Map0=Map1 map0 map3 -> Map0=Map1 (insert0 name map0) (insert3 name map3)
+-- same-after-inserting : forall map0 map3 name value. Map0=Map3 map0 map3 -> Map0=Map3 (insert0 name map0) (insert3 name map3)
 
 -- I don't know how to prove theorem about Map.
 -- Maybe I should learn denotational semantics.

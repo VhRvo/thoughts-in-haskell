@@ -241,6 +241,7 @@ library
         , Bound.Scope3
         , Bound.Scope3Demo
         , Bound.Scope3Lambda
+        , HashingModuloAlphaEquivalence.Demo1
 
 
     -- Modules included in this library but not exported.
