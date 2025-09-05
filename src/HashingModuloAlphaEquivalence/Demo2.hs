@@ -1,9 +1,10 @@
-module HashingModuloAlphaEquivalence.Demo1 where
+module HashingModuloAlphaEquivalence.Demo2 where
 
 import Data.Map.Merge.Strict qualified as Map
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)
+import Data.Function (on)
 
 type Name = Text
 
@@ -17,38 +18,28 @@ data ESummary
 
 data PosTree
   = PTHere
-  | PTLeftOnly PosTree
-  | PTRightOnly PosTree
-  | PTBoth PosTree PosTree
+  -- Maybe PosTree: Child from bigger map
+  -- PosTree: Child from smaller map
+  | PTJoin StructureTag (Maybe PosTree) PosTree
   deriving stock (Eq, Show)
 
-pickL :: PosTree -> Maybe PosTree
-pickL (PTLeftOnly left) = Just left
-pickL (PTBoth left _) = Just left
-pickL _ = Nothing
+mkPTJoin :: StructureTag -> Maybe PosTree -> PosTree -> PosTree
+mkPTJoin = PTJoin
 
-pickR :: PosTree -> Maybe PosTree
-pickR (PTRightOnly right) = Just right
-pickR (PTBoth _ right) = Just right
-pickR _ = Nothing
+type StructureTag = Int
 
-renderPosTree :: PosTree -> Text
-renderPosTree = go
-  where
-    go PTHere = "H"
-    go (PTLeftOnly left) = "L" <> go left
-    go (PTRightOnly right) = "R" <> go right
-    go (PTBoth left right) = "B[" <> go left <> "][" <> go right <> "]"
-
--- >>> renderPosTree PTHere
--- >>> renderPosTree (PTBoth (PTBoth (PTLeftOnly (PTRightOnly PTHere)) (PTRightOnly (PTLeftOnly (PTRightOnly PTHere)))) (PTLeftOnly (PTRightOnly PTHere)))
--- "H"
--- "B[B[LRH][RLRH]][LRH]"
+structureTag :: Structure -> StructureTag
+structureTag = \case
+  SVar -> 1
+  SLam _ body -> 1 + structureTag body
+  SApp _ fun arg -> 1 + max (structureTag fun) (structureTag arg)
 
 data Structure
   = SVar
   | SLam (Maybe PosTree) Structure
-  | SApp Structure Structure
+  -- True if the left expr has more free vars
+  -- False if the right expr has more free vars
+  | SApp Bool Structure Structure
 
 mkSVar :: Structure
 mkSVar = SVar
@@ -56,7 +47,7 @@ mkSVar = SVar
 mkSLam :: Maybe PosTree -> Structure -> Structure
 mkSLam = SLam
 
-mkSApp :: Structure -> Structure -> Structure
+mkSApp :: Bool -> Structure -> Structure -> Structure
 mkSApp = mkSApp
 
 type VarMap = Map Name PosTree
@@ -70,8 +61,14 @@ singletonVM = Map.singleton
 extendVM :: Name -> PosTree -> VarMap -> VarMap
 extendVM = Map.insert
 
+alterVM :: (Maybe PosTree -> PosTree) -> Name -> VarMap -> VarMap
+alterVM f = Map.alter (Just . f)
+
 removeFromVM :: Name -> VarMap -> (VarMap, Maybe PosTree)
 removeFromVM name map = (Map.delete name map, Map.lookup name map)
+
+isBiggerThanVM :: VarMap -> VarMap -> Bool
+isBiggerThanVM = (>) `on` Map.size
 
 toListVM :: VarMap -> [(Name, PosTree)]
 toListVM = Map.toList
@@ -116,9 +113,16 @@ summariseExp = \case
     let
       ESummary funStructure funMap = summariseExp fun
       ESummary argStructure argMap = summariseExp arg
-      merge = mergeVM PTLeftOnly PTRightOnly PTBoth
+      leftBigger = funMap `isBiggerThanVM` argMap
+      (bigMap, smallMap)
+        | leftBigger = (funMap, argMap)
+        | otherwise = (argMap, funMap)
+      structure = mkSApp leftBigger funStructure argStructure
+      add :: (Name, PosTree) -> VarMap -> VarMap
+      add (key, value) = Map.insert key value
+      map = foldr add bigMap (toListVM smallMap)
      in
-      ESummary (mkSApp funStructure argStructure) (merge funMap argMap)
+      ESummary structure map
 
 rebuild :: (Name -> Name) -> Name -> ESummary -> Exp
 rebuild freshen fresh (ESummary structure map) =
@@ -131,7 +135,21 @@ rebuild freshen fresh (ESummary structure map) =
           case posTree of
             Nothing -> map
             Just posTree' -> extendVM fresh posTree' map
-    SApp fun arg ->
+    SApp leftBigger fun arg ->
       App
-        (rebuild freshen fresh (ESummary fun (Map.mapMaybe pickL map)))
-        (rebuild freshen fresh (ESummary arg (Map.mapMaybe pickR map)))
+        (rebuild freshen fresh (ESummary fun funMap))
+        (rebuild freshen fresh (ESummary arg argMap))
+      where
+        bigMap =
+          Map.mapMaybe
+            (\case
+                (PTJoin _ mp _) -> mp
+                _ -> Nothing) map
+        smallMap =
+          Map.mapMaybe
+            (\case
+              (PTJoin _ _ p) -> Just p
+              _ -> Nothing) map
+        (funMap, argMap)
+          | leftBigger = (bigMap, smallMap)
+          | otherwise = (smallMap, bigMap)

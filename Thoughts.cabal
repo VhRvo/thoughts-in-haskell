@@ -241,7 +241,9 @@ library
         , Bound.Scope3
         , Bound.Scope3Demo
         , Bound.Scope3Lambda
+        , HashingModuloAlphaEquivalence.Merge
         , HashingModuloAlphaEquivalence.Demo1
+        , HashingModuloAlphaEquivalence.Demo2
         , NestedDataType.NTree
         , NestedDataType.DeBruijn.DeBruijn
 
