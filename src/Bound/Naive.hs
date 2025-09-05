@@ -1,9 +1,9 @@
 module Bound.Naive where
 
+import Data.List (elemIndex)
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 import Data.Text (Text)
-import Data.List (elemIndex)
 
 type Name = Text
 
@@ -93,7 +93,7 @@ empty2 = Map2 Map.empty
 
 insert2 :: Name -> Map2 -> Map2
 insert2 name (Map2 map) =
-  Map2(Map.insert name (length map) map)
+  Map2 (Map.insert name (length map) map)
 
 lookup2 :: Name -> Map2 -> Maybe Int
 lookup2 name (Map2 map) =
@@ -126,5 +126,3 @@ lookup3 name (Map3 size map) =
 
 -- I don't know how to prove theorem about Map.
 -- Maybe I should learn denotational semantics.
-
-

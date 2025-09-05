@@ -1,5 +1,5 @@
-{-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE DefaultSignatures #-}
+{-# LANGUAGE DeriveTraversable #-}
 
 module Bound.Scope3 where
 
@@ -20,9 +20,9 @@ instance Applicative (Var b) where
 instance Monad (Var b) where
   (>>=) :: forall b a c. Var b a -> (a -> Var b c) -> Var b c
   Bound bound >>= _ = Bound bound
-  Free x      >>= f = f x
+  Free x >>= f = f x
 
-newtype Scope b f a = Scope { runScope :: f (Var b (f a)) }
+newtype Scope b f a = Scope {runScope :: f (Var b (f a))}
   -- deriving (Eq, Ord, Show)
   deriving (Functor, Foldable, Traversable)
 
@@ -39,14 +39,14 @@ instance (Monad f) => Monad (Scope b f) where
     where
       go :: Var b (f a) -> f (Var b (f c))
       go (Bound name) = pure (Bound name)
-      go (Free name)  = name >>= runScope . f
+      go (Free name) = name >>= runScope . f
 
 instance MonadTrans (Scope b) where
   lift :: forall f b a. (Monad f) => f a -> Scope b f a
-  lift = Scope . pure. Free
+  lift = Scope . pure . Free
 
 class Bound t where
-  (>>>=) :: Monad f => t f a -> (a -> f b) -> t f b
+  (>>>=) :: (Monad f) => t f a -> (a -> f b) -> t f b
   default (>>>=) :: (MonadTrans t, Monad f) => t f a -> (a -> f b) -> t f b
   mx >>>= f = mx >>= lift . f
 
@@ -65,6 +65,4 @@ instantiate k (Scope body) = body >>= go
   where
     go :: Var b (f a) -> f a
     go (Bound bound) = k bound
-    go (Free fx)     = fx
-
-
+    go (Free fx) = fx

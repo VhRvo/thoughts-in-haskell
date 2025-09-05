@@ -2,8 +2,8 @@
 
 module Bound.Scope3Demo where
 
-import Control.Monad
 import Bound.Scope3
+import Control.Monad
 import Control.Monad.Trans (lift)
 
 data Expr a
@@ -21,11 +21,11 @@ instance Applicative Expr where
 
 instance Monad Expr where
   (>>=) :: forall a b. Expr a -> (a -> Expr b) -> Expr b
-  Var var           >>= f =
+  Var var >>= f =
     f var
-  App fun arg       >>= f =
+  App fun arg >>= f =
     App (fun >>= f) (arg >>= f)
-  Lam body          >>= f =
+  Lam body >>= f =
     -- Lam (body >>= lift . f)
     Lam (body >>>= f)
   Let bindings body >>= f =
@@ -34,6 +34,3 @@ instance Monad Expr where
       -- (body >>= lift . f)
       (fmap (>>>= f) bindings)
       (body >>>= f)
-
-
-

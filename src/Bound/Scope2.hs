@@ -7,7 +7,7 @@ import Control.Monad.Trans
 import Data.Maybe (fromMaybe)
 
 newtype Scope f a
-  = Scope { runScope :: f (Maybe (f a)) }
+  = Scope {runScope :: f (Maybe (f a))}
   deriving (Functor, Foldable, Traversable)
 
 instance (Monad f) => Applicative (Scope f) where
@@ -29,8 +29,9 @@ instance MonadTrans Scope where
   lift :: forall m a. (Monad m) => m a -> Scope m a
   -- no longer requires touching every leaf in the expression
   lift = Scope . pure . Just
-  -- still requires touching every leaf in the expression
-  -- lift = Scope . fmap (pure . pure)
+
+-- still requires touching every leaf in the expression
+-- lift = Scope . fmap (pure . pure)
 
 abstract :: forall f a. (Monad f, Eq a) => a -> f a -> Scope f a
 abstract x fx = Scope (fmap go fx)
@@ -48,5 +49,5 @@ instanitiate' :: forall f a. (Monad f) => a -> Scope f a -> f a
 instanitiate' x (Scope body) = body >>= go
   where
     go :: Maybe (f a) -> f a
-    go Nothing   = pure x
+    go Nothing = pure x
     go (Just fx) = fx

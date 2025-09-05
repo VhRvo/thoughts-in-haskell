@@ -242,6 +242,8 @@ library
         , Bound.Scope3Demo
         , Bound.Scope3Lambda
         , HashingModuloAlphaEquivalence.Demo1
+        , NestedDataType.NTree
+        , NestedDataType.DeBruijn.DeBruijn
 
 
     -- Modules included in this library but not exported.

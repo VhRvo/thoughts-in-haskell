@@ -2,10 +2,10 @@
 
 module Bound.Nested1 where
 
+import Control.Monad (ap)
 import Data.Foldable
 import Data.Foldable qualified as Foldable
 import Data.Traversable
-import Control.Monad (ap)
 
 data Expr a
   = Var a

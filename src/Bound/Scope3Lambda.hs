@@ -1,15 +1,16 @@
 {-# LANGUAGE DeriveTraversable #-}
+
 module Bound.Scope3Lambda where
 
 import Bound.Scope3
-import Data.Functor.Classes
 import Control.Monad (ap)
+import Data.Functor.Classes
 
 data Exp a
   = Var a
   | App (Exp a) (Exp a)
   | Lam (Scope () Exp a)
---   deriving (Eq, Ord, Show)
+  --   deriving (Eq, Ord, Show)
   deriving (Functor, Foldable, Traversable)
 
 instance Applicative Exp where
@@ -17,9 +18,9 @@ instance Applicative Exp where
   (<*>) = ap
 
 instance Monad Exp where
-  Var a       >>= f = f a
+  Var a >>= f = f a
   App fun arg >>= f = App (fun >>= f) (arg >>= f)
-  Lam body    >>= f = Lam (body >>>= f)
+  Lam body >>= f = Lam (body >>>= f)
 
 -- instance Eq1 Exp
 
@@ -39,4 +40,3 @@ instance Monad Exp where
 -- nf (App fun arg) = case whnf f of
 --   Lam body -> nf (instantiate (const arg) body)
 --   fun' -> nf fun' `App` nf arg
-

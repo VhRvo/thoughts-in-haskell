@@ -2,13 +2,13 @@
 
 module Bound.Scope1 where
 
+import Control.Monad (ap, guard)
+import Control.Monad.Trans (MonadTrans (..))
 import Data.Foldable
 import Data.Foldable qualified as Foldable
 import Data.Traversable
-import Control.Monad (ap, guard)
-import Control.Monad.Trans (MonadTrans(..))
 
-newtype Scope f a = Scope { runScope :: f (Maybe a) }
+newtype Scope f a = Scope {runScope :: f (Maybe a)}
   deriving (Functor, Foldable, Traversable)
 
 instance (Monad f) => Applicative (Scope f) where
@@ -20,6 +20,7 @@ instance (Monad f) => Applicative (Scope f) where
 instance (Monad f) => Monad (Scope f) where
   (>>=) :: forall f a b. (Monad f) => Scope f a -> (a -> Scope f b) -> Scope f b
   Scope m >>= f = Scope (m >>= maybe (pure Nothing) (runScope . f))
+
 --   Scope m >>= f = Scope $
 --     m >>= \case
 --       Nothing -> pure Nothing
