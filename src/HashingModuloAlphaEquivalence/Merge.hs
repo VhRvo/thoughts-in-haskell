@@ -1,2 +1,1 @@
 module HashingModuloAlphaEquivalence.Merge where
-

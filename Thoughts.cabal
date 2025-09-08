@@ -246,6 +246,7 @@ library
         , HashingModuloAlphaEquivalence.Demo2
         , NestedDataType.NTree
         , NestedDataType.DeBruijn.DeBruijn
+        , Fix.Polymorphic
 
 
     -- Modules included in this library but not exported.
