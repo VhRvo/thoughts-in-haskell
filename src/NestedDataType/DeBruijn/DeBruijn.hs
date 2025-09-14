@@ -4,7 +4,7 @@
 module NestedDataType.DeBruijn.DeBruijn where
 
 import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
 
 data Pair a = Pair a a
   deriving (Functor)
@@ -52,7 +52,7 @@ foldTerm ::
 --   (forall a. Incr a -> a) ->
 --   Term b ->
 --   b
-foldTerm var _   _   (Var x) = var x
+foldTerm var _ _ (Var x) = var x
 foldTerm var app lam (App pair) = (app . mapP (foldTerm var app lam)) pair
 foldTerm var app lam (Lam body) = (lam . foldTerm var app lam) body
 
@@ -64,7 +64,7 @@ gfoldTerm ::
   (forall a. Incr (m a) -> m (Incr a)) ->
   Term (m b) ->
   n b
-gfoldTerm var _   _   _ (Var x) = var x
+gfoldTerm var _ _ _ (Var x) = var x
 gfoldTerm var app lam k (App pair) = (app . mapP (gfoldTerm var app lam k)) pair
 gfoldTerm var app lam k (Lam body) = (lam . gfoldTerm var app lam k . mapT k) body
 
@@ -76,7 +76,7 @@ kfoldTerm ::
   (Incr a -> a) ->
   Term a ->
   b
-kfoldTerm var _   _   _ (Var x) = var x
+kfoldTerm var _ _ _ (Var x) = var x
 kfoldTerm var app lam k (App pair) = (app . mapP (kfoldTerm var app lam k)) pair
 kfoldTerm var app lam k (Lam body) = (lam . kfoldTerm var app lam k . mapT k) body
 
@@ -94,6 +94,7 @@ showTC = showTerm . mapT wrap
 
 term1 :: Term Char
 term1 = Lam (PApp (Var Zero) (PApp (Var (Succ 'x')) (Var (Succ 'y'))))
+
 -- term1 = Lam (App (Pair (Var Zero) (App (Pair (Var (Succ 'x')) (Var (Succ 'y'))))))
 
 -- >>> showTC term1
@@ -103,7 +104,7 @@ joinTerm :: Term (Term a) -> Term a
 joinTerm = gfoldTerm id App Lam distTerm
 
 distTerm :: Incr (Term a) -> Term (Incr a)
-distTerm Zero        = Var Zero
+distTerm Zero = Var Zero
 distTerm (Succ term) = mapT Succ term
 
 abstract :: (Eq a) => a -> Term a -> Term a
@@ -111,14 +112,14 @@ abstract x = Lam . mapT (match x)
 
 match :: (Eq a) => a -> a -> Incr a
 match x y
-  | x == y    = Zero
+  | x == y = Zero
   | otherwise = Succ y
 
 apply :: Term a -> Term (Incr a) -> Term a
 apply arg body = joinTerm (mapT (subst arg . mapI Var) body)
 
 subst :: forall a. a -> Incr a -> a
-subst x Zero     = x
+subst x Zero = x
 subst _ (Succ y) = y
 
 -- subst :: Term a -> Incr (Term a) -> Term a
@@ -129,4 +130,3 @@ subst _ (Succ y) = y
 -- t = Lam (PApp (Var Zero) (Var (Succ Zero)))
 
 -- >>> subst (Lam (PApp Zero (Succ Zero)))
-

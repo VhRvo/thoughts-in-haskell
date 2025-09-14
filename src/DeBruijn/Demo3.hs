@@ -31,15 +31,15 @@ mult = \case
 mapWithPolicy :: ((a -> b) -> (a -> b)) -> (a -> b) -> Term a -> Term b
 mapWithPolicy z f =
   \case
-    Var x       -> Var (f x)
-    Lam body    -> Lam (mapWithPolicy z (z f) body)
+    Var x -> Var (f x)
+    Lam body -> Lam (mapWithPolicy z (z f) body)
     App fun arg -> App (mapWithPolicy z f fun) (mapWithPolicy z f arg)
 
 multWithPolicy :: ((a -> Term b) -> (a -> Term b)) -> (a -> Term b) -> Term a -> Term b
 multWithPolicy z f =
   \case
-    Var x       -> f x
-    Lam body    -> Lam (multWithPolicy z (z f) body)
+    Var x -> f x
+    Lam body -> Lam (multWithPolicy z (z f) body)
     App fun arg -> App (multWithPolicy z f fun) (multWithPolicy z f arg)
 
 succ :: Int -> Int
@@ -47,17 +47,18 @@ succ = (1 +)
 
 lift :: (Int -> Int) -> Int -> Int
 lift f n
-  | n == 0    = 0
+  | n == 0 = 0
   | otherwise = 1 + f (n - 1)
-              -- ^        ^ decrement out of lambda
-              -- | increment under lambda
+
+-- \^        ^ decrement out of lambda
+-- \| increment under lambda
 
 shift :: (Int -> Term Int) -> Int -> Term Int
 shift env n
-  | n == 0    = pure 0
+  | n == 0 = pure 0
   | otherwise =
-    -- mapWithPolicy lift succ (env (n - 1))
-    mapWithPolicyLift Zero (env (n - 1))
+      -- mapWithPolicy lift succ (env (n - 1))
+      mapWithPolicyLift Zero (env (n - 1))
 
 zero' :: Term Int
 zero' = undefined
@@ -81,28 +82,28 @@ data Nat
 
 -- not tail recursion
 applyShift :: Nat -> Int -> Term Int
-applyShift Zero         0 = zero'
-applyShift Zero         _ = succ'
+applyShift Zero 0 = zero'
+applyShift Zero _ = succ'
 -- applyShift (Succ times) n = shift (applyShift times) n
-applyShift (Succ _)     0 = pure 0
+applyShift (Succ _) 0 = pure 0
 applyShift (Succ times) n = mapWithPolicyLift Zero (applyShift times (n - 1))
 
 multWithPolicyShiftEnv :: Nat -> Term Int -> Term Int
 multWithPolicyShiftEnv times =
   \case
-    Var x       -> applyShift times x
-    Lam body    -> Lam (multWithPolicyShiftEnv (Succ times) body)
+    Var x -> applyShift times x
+    Lam body -> Lam (multWithPolicyShiftEnv (Succ times) body)
     App fun arg -> App (multWithPolicyShiftEnv times fun) (multWithPolicyShiftEnv times arg)
 
 applyLift :: Nat -> Int -> Int
-applyLift Zero         n = n + 1
+applyLift Zero n = n + 1
 -- applyLift (Succ times) n = lift (applyLift times) n
-applyLift (Succ _)     0 = 0
+applyLift (Succ _) 0 = 0
 applyLift (Succ times) n = succ (applyLift times (n - 1))
 
 mapWithPolicyLift :: Nat -> Term Int -> Term Int
 mapWithPolicyLift times =
   \case
-    Var x       -> Var (applyLift times x)
-    Lam body    -> Lam (mapWithPolicyLift (Succ times) body)
+    Var x -> Var (applyLift times x)
+    Lam body -> Lam (mapWithPolicyLift (Succ times) body)
     App fun arg -> App (mapWithPolicyLift times fun) (mapWithPolicyLift times arg)

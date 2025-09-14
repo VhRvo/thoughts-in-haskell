@@ -31,15 +31,15 @@ mult = \case
 mapWithPolicy :: ((a -> b) -> (a -> b)) -> (a -> b) -> Term a -> Term b
 mapWithPolicy z f =
   \case
-    Var x       -> Var (f x)
-    Lam body    -> Lam (mapWithPolicy z (z f) body)
+    Var x -> Var (f x)
+    Lam body -> Lam (mapWithPolicy z (z f) body)
     App fun arg -> App (mapWithPolicy z f fun) (mapWithPolicy z f arg)
 
 multWithPolicy :: ((a -> Term b) -> (a -> Term b)) -> (a -> Term b) -> Term a -> Term b
 multWithPolicy z f =
   \case
-    Var x       -> f x
-    Lam body    -> Lam (multWithPolicy z (z f) body)
+    Var x -> f x
+    Lam body -> Lam (multWithPolicy z (z f) body)
     App fun arg -> App (multWithPolicy z f fun) (multWithPolicy z f arg)
 
 succ :: Int -> Int
@@ -47,17 +47,18 @@ succ = (1 +)
 
 lift :: (Int -> Int) -> Int -> Int
 lift f n
-  | n == 0    = 0
+  | n == 0 = 0
   | otherwise = 1 + f (n - 1)
-              -- ^        ^ decrement out of lambda
-              -- | increment under lambda
+
+-- \^        ^ decrement out of lambda
+-- \| increment under lambda
 
 shift :: (Int -> Term Int) -> Int -> Term Int
 shift env n
-  | n == 0    = pure 0
+  | n == 0 = pure 0
   | otherwise =
-    -- mapWithPolicy lift succ (env (n - 1))
-    mapWithPolicyLift 0 (env (n - 1))
+      -- mapWithPolicy lift succ (env (n - 1))
+      mapWithPolicyLift 0 (env (n - 1))
 
 zero' :: Term Int
 zero' = undefined
@@ -89,15 +90,15 @@ nTimes n f = nTimes (n - 1) f . f
 -- conditional version
 applyShift :: Int -> Int -> Term Int
 applyShift times n
-  | times > n  = nTimes n     (mapWithPolicyLift 0) (pure 0)
-  | times == n = nTimes n     (mapWithPolicyLift 0) zero'
-  | otherwise  = nTimes times (mapWithPolicyLift 0) succ'
+  | times > n = nTimes n (mapWithPolicyLift 0) (pure 0)
+  | times == n = nTimes n (mapWithPolicyLift 0) zero'
+  | otherwise = nTimes times (mapWithPolicyLift 0) succ'
 
 multWithPolicyShiftEnv :: Int -> Term Int -> Term Int
 multWithPolicyShiftEnv times =
   \case
-    Var x       -> applyShift times x
-    Lam body    -> Lam (multWithPolicyShiftEnv (1 + times) body)
+    Var x -> applyShift times x
+    Lam body -> Lam (multWithPolicyShiftEnv (1 + times) body)
     App fun arg -> App (multWithPolicyShiftEnv times fun) (multWithPolicyShiftEnv times arg)
 
 -- applyLift :: Int -> Int -> Int
@@ -108,13 +109,13 @@ multWithPolicyShiftEnv times =
 -- applyLift times n = succ (applyLift (times - 1) (n - 1))
 applyLift :: Int -> Int -> Int
 applyLift times n
-  | times > n  = nTimes n     succ 0
-  | times == n = nTimes n     succ 1
-  | otherwise  = nTimes times succ (n - times + 1)
+  | times > n = nTimes n succ 0
+  | times == n = nTimes n succ 1
+  | otherwise = nTimes times succ (n - times + 1)
 
 mapWithPolicyLift :: Int -> Term Int -> Term Int
 mapWithPolicyLift times =
   \case
-    Var x       -> Var (applyLift times x)
-    Lam body    -> Lam (mapWithPolicyLift (1 + times) body)
+    Var x -> Var (applyLift times x)
+    Lam body -> Lam (mapWithPolicyLift (1 + times) body)
     App fun arg -> App (mapWithPolicyLift times fun) (mapWithPolicyLift times arg)

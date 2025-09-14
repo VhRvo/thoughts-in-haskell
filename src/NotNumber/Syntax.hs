@@ -1,13 +1,13 @@
 module NotNumber.Syntax where
 
+import Control.Applicative (Alternative (..))
 import Data.Text (Text)
-import Control.Applicative (Alternative(..))
-
 
 -- type Name = Text
 type Name = Stack (Text, Int)
 
 infixl 9 :$
+
 infixr 6 :->
 
 data Exp
@@ -30,13 +30,12 @@ abstract name = Scope . nameTo 0
     nameTo :: Int -> Exp -> Exp
     nameTo outer = \case
       F name'
-          | name == name' -> B outer
-          | otherwise -> F name'
+        | name == name' -> B outer
+        | otherwise -> F name'
       B index -> B index
       fun :$ arg -> nameTo outer fun :$ nameTo outer arg
       domain :-> Scope body ->
         nameTo outer domain :-> Scope (nameTo (1 + outer) body)
-
 
 -- >>> subst 0 image lam
 -- F "b" :-> Scope (F "c" :-> Scope (F "a" :-> Scope (B 3 :$ B 0)))
@@ -68,9 +67,9 @@ shift outer inner = \case
   B index
     -- too tricky to use `<` instead of `<=`
     | index < inner ->
-      B index
+        B index
     | otherwise ->
-      B (outer + index)
+        B (outer + index)
   fun :$ arg ->
     shift outer inner fun :$ shift outer inner arg
   domain :-> Scope body ->
@@ -92,9 +91,10 @@ subst target image (Scope body) = replace body
 
 unapply :: (Alternative m) => Exp -> m (Exp, Exp)
 unapply (fun :$ arg) = pure (fun, arg)
-unapply _            = empty
+unapply _ = empty
 
 infix 5 :<-
+
 data Binding = Name :<- Exp
 
 bName :: Binding -> Name
@@ -104,6 +104,7 @@ bVar :: Binding -> Exp
 bVar = F . bName
 
 infixl 4 :<
+
 data Stack x
   = Empty
   | Stack x :< x
@@ -118,11 +119,13 @@ data Step
   | Range Binding ()
 
 infixl 4 <+
+
 (<+) :: Stack a -> Stack a -> Stack a
 xs <+ Empty = xs
 xs <+ (ys :< y) = xs <+ ys :< y
 
 infixl 6 //
+
 (//) :: Name -> Text -> Name
 root // string = root :< (string, 0)
 
@@ -132,21 +135,25 @@ name = (Empty //)
 type Agency agent = Name -> agent
 
 infixr 6 -->
+
 (-->) :: Binding -> Exp -> Exp
 (name :<- domain) --> range = domain :-> abstract name range
 
-infix <--
-(<--) :: (Alternative m) =>
+infix 9 <--
+
+(<--) ::
+  (Alternative m) =>
   Agency (Exp -> m (Binding, Exp))
 name <-- (domain :-> scope) =
-    pure (name :<- domain, instantiate (F name) scope)
-_    <-- _ = empty
+  pure (name :<- domain, instantiate (F name) scope)
+_ <-- _ = empty
 
 type Prefix = Stack Binding
 
 infixr 6 ->>
+
 (->>) :: Prefix -> Exp -> Exp
-Empty                 ->> expr  = expr
+Empty ->> expr = expr
 (bindings :< binding) ->> range = bindings ->> (binding --> range)
 
 -- If root is independent of all the names in expr—which it will be,
@@ -167,11 +174,13 @@ unprefix root id exp =
 weaken :: Agency (Exp -> Exp -> Exp)
 weaken root domain exp =
   (xdomain :< ((root // "y") :<- domain)) ->> range
-  -- xdomain ->> (((root // "y") :<- domain) --> range)
   where
+    -- xdomain ->> (((root // "y") :<- domain) --> range)
+
     (xdomain, range) = unprefix root "x" exp
 
 infixl 9 $$
+
 ($$) :: Exp -> [Exp] -> Exp
 exp $$ [] = exp
 fun $$ (arg : args) = (fun :$ arg) $$ args
@@ -181,7 +190,7 @@ unapplies exp = peel exp []
   where
     peel :: Exp -> [Exp] -> (Exp, [Exp])
     peel (fun :$ arg) args = peel fun (arg : args)
-    peel nonApp       args = (nonApp, args)
+    peel nonApp args = (nonApp, args)
 
 data Analysis = ForAll Prefix Name [Exp]
 
@@ -193,6 +202,7 @@ analysis root id expr =
     (F f, args) = unapplies range
 
 infixl 9 -$$
+
 (-$$) :: Name -> Prefix -> Exp
 (-$$) f = apply (F f)
   where
@@ -203,5 +213,3 @@ infixl 9 -$$
 generalize :: Prefix -> Binding -> (Binding, Exp -> Exp)
 generalize bindings (name :<- exp) =
   (name :<- bindings ->> exp, substitute (name -$$ bindings) name)
-
-

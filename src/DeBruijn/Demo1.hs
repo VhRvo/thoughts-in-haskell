@@ -29,15 +29,15 @@ mult = \case
 mapWithPolicy :: ((a -> b) -> (a -> b)) -> (a -> b) -> Term a -> Term b
 mapWithPolicy z f =
   \case
-    Var x       -> Var (f x)
-    Lam body    -> Lam (mapWithPolicy z (z f) body)
+    Var x -> Var (f x)
+    Lam body -> Lam (mapWithPolicy z (z f) body)
     App fun arg -> App (mapWithPolicy z f fun) (mapWithPolicy z f arg)
 
 multWithPolicy :: ((a -> Term b) -> (a -> Term b)) -> (a -> Term b) -> Term a -> Term b
 multWithPolicy z f =
   \case
-    Var x       -> f x
-    Lam body    -> Lam (multWithPolicy z (z f) body)
+    Var x -> f x
+    Lam body -> Lam (multWithPolicy z (z f) body)
     App fun arg -> App (multWithPolicy z f fun) (multWithPolicy z f arg)
 
 applySubstitution :: (Int -> Term Int) -> Term Int -> Term Int
@@ -51,8 +51,8 @@ applySubstitution env term =
     lift f n
       | n == 0 = 0
       | otherwise = 1 + f (n - 1)
-                 -- ^        ^ decrement out of lambda
-                 -- | increment under lambda
+    -- \^        ^ decrement out of lambda
+    -- \| increment under lambda
     shift :: (Int -> Term Int) -> Int -> Term Int
     shift env n
       | n == 0 = pure 0

@@ -256,7 +256,6 @@ library
         , DeBruijn.Demo5
         , DeBruijn.Demo6
         , DeBruijn.Demo7
-        , DeBruijn.Demo8
 
 
     -- Modules included in this library but not exported.
