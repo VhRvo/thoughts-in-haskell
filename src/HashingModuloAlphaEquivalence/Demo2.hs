@@ -161,6 +161,3 @@ rebuild freshen fresh (ESummary structure map) =
         (funMap, argMap)
           | leftBigger = (bigMap, smallMap)
           | otherwise = (smallMap, bigMap)
-
-
-

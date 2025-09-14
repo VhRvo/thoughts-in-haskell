@@ -247,6 +247,16 @@ library
         , NestedDataType.NTree
         , NestedDataType.DeBruijn.DeBruijn
         , Fix.Polymorphic
+        , NotNumber.Syntax
+        , CPS.Continued.Normal
+        , DeBruijn.Demo1
+        , DeBruijn.Demo2
+        , DeBruijn.Demo3
+        , DeBruijn.Demo4
+        , DeBruijn.Demo5
+        , DeBruijn.Demo6
+        , DeBruijn.Demo7
+        , DeBruijn.Demo8
 
 
     -- Modules included in this library but not exported.
