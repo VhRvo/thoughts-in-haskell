@@ -256,6 +256,25 @@ library
         , DeBruijn.Demo5
         , DeBruijn.Demo6
         , DeBruijn.Demo7
+        , Embed.Def
+        , Embed.Linear
+        , Embed.Scratch.V1
+        , Embed.Scratch.V2
+        , Embed.Scratch.V3
+        , Embed.Scratch.V4
+        , Embed.Scratch.V5
+        , Embed.Scratch.V51
+        , Embed.Scratch.V6
+        , Embed.Scratch.V7
+        , Embed.Scratch.V71
+        , Embed.Scratch.V72
+        , Embed.Scratch.V8
+        , Embed.Reasoning.V1
+        , Embed.Reasoning.V2
+        , Embed.Reasoning.V3
+        , Embed.Reasoning.V4
+        , Embed.Reasoning.V5
+        , Foldl.Def
 
 
     -- Modules included in this library but not exported.

@@ -2,6 +2,7 @@
 
 module DeBruijn.Demo7 where
 
+import Data.Function (fix)
 import Prelude hiding (succ)
 
 data Term a
