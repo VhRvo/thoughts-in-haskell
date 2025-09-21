@@ -148,6 +148,7 @@ library
         , InvariantInCPS.Normal
         , CPS.Normal
         , CPS.Normal2
+        , CPS.Normal3
         , SimpleRustSyntax
         , Datalog
         , Unification.Expr
@@ -274,6 +275,7 @@ library
         , Embed.Reasoning.V3
         , Embed.Reasoning.V4
         , Embed.Reasoning.V5
+        , Embed.Reasoning.V6
         , Foldl.Def
 
 
