@@ -47,15 +47,25 @@ evalK expr = case expr of
     \env k -> k (VLam id env body)
   EApp e1 e2 ->
     \env k ->
-       evalK e1 env 
-        (\func -> evalK e2 env 
-         (\arg -> apply func arg k))
+      evalK
+        e1
+        env
+        ( \func ->
+            evalK
+              e2
+              env
+              (\arg -> apply func arg k)
+        )
   EIf e1 e2 e3 ->
-    \env k -> evalK e1 env
-     (\premise ->
-      if testPremise premise
-        then evalK e2 env k
-        else evalK e3 env k)
+    \env k ->
+      evalK
+        e1
+        env
+        ( \premise ->
+            if testPremise premise
+              then evalK e2 env k
+              else evalK e3 env k
+        )
 
 testPremise :: Value -> Bool
 testPremise = undefined
@@ -68,8 +78,8 @@ data Exp1
   | E1If Exp Exp Exp
 
 applyExp1 :: Exp1 -> Env -> Cont -> Value
-applyExp1 dcont =
-  case dcont of
+applyExp1 exp =
+  case exp of
     E1Int int ->
       \_ k -> k (VInt int)
     E1Var id ->
@@ -78,32 +88,35 @@ applyExp1 dcont =
       \env k -> k (VLam id env body)
     E1App e1 e2 ->
       \env k ->
-         evalK e1 env
-          (\func -> evalK e2 env 
-           (\arg -> apply func arg k))
+        evalK
+          e1
+          env
+          ( \func ->
+              evalK
+                e2
+                env
+                (\arg -> apply func arg k)
+          )
     E1If e1 e2 e3 ->
-      \env k -> evalK e1 env
-       (\premise ->
-        if testPremise premise
-          then evalK e2 env k
-          else evalK e3 env k)
+      \env k ->
+        evalK
+          e1
+          env
+          ( \premise ->
+              if testPremise premise
+                then evalK e2 env k
+                else evalK e3 env k
+          )
 
 evalK1 :: Exp -> Env -> Cont -> Value
 evalK1 expr = case expr of
   EInt int ->
-    \_ k -> k (VInt int)
+    applyExp1 (E1Int int)
   EVar id ->
-    \env k -> k (fromJust (env !? id))
+    applyExp1 (E1Var id)
   ELam id body ->
-    \env k -> k (VLam id env body)
+    applyExp1 (E1Lam id body)
   EApp e1 e2 ->
-    \env k ->
-      evalK1 e1 env
-       (\func -> evalK1 e2 env 
-        (\arg -> apply func arg k))
+    applyExp1 (E1App e1 e2)
   EIf e1 e2 e3 ->
-    \env k -> evalK e1 env
-     (\premise ->
-      if testPremise premise
-        then evalK e2 env k
-        else evalK e3 env k)
+    applyExp1 (E1If e1 e2 e3)

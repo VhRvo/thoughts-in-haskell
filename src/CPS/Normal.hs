@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Avoid lambda" #-}
 module CPS.Normal where
 
 import Data.Map (Map, (!?))
@@ -8,6 +11,8 @@ import Prelude hiding (id)
 
 newtype Identifier = Identifier Text
   deriving (Eq, Ord, Show)
+
+type Cont = Value -> Value
 
 data Expr
   = Constant Int
@@ -38,13 +43,15 @@ eval expr env = case expr of
   Lambda id body -> Closure id env body
   Application e1 e2 -> eval e1 env `apply` eval e2 env
 
-evalK :: Expr -> Env -> (Value -> Value) -> Value
+evalK :: Expr -> Env -> Cont -> Value
 evalK expr env k = case expr of
-  Constant integer -> k (Integer integer)
-  Add left right -> evalK left env (evalK right env . add)
-  -- Add left right -> evalK left env (\leftV -> evalK right env (\rightV -> add leftV rightV))
-  Variable id -> k (fromJust (env !? id))
-  Lambda id body -> k (Closure id env body)
-  Application e1 e2 -> evalK e1 env (evalK e2 env . apply)
-
--- Application e1 e2 -> evalK e1 env (\func -> evalK e2 env (\arg -> apply func arg))
+  Constant integer ->
+    k (Integer integer)
+  Add left right ->
+    evalK left env (\leftV -> evalK right env (\rightV -> add leftV rightV))
+  Variable id ->
+    k (fromJust (env !? id))
+  Lambda id body ->
+    k (Closure id env body)
+  Application e1 e2 ->
+    evalK e1 env (\func -> evalK e2 env (\arg -> apply func arg))

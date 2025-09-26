@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Functor law" #-}
 module Embed.Scratch.V8 where
 
@@ -16,6 +17,5 @@ distribute' :: forall f a. (Functor f) => Y f (f a) -> Y f a
 distribute' = YS . distribute
 
 distribute :: forall f a. (Functor f) => Y f (f a) -> f (Y f a)
-distribute (YZ a) = fmap YZ . fmap id         $ a
+distribute (YZ a) = fmap YZ . fmap id $ a
 distribute (YS x) = fmap YS . fmap distribute $ x
-

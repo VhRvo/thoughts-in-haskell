@@ -149,6 +149,7 @@ library
         , CPS.Normal
         , CPS.Normal2
         , CPS.Normal3
+        , CPS.Deriving.Normal1
         , SimpleRustSyntax
         , Datalog
         , Unification.Expr
@@ -277,6 +278,17 @@ library
         , Embed.Reasoning.V5
         , Embed.Reasoning.V6
         , Foldl.Def
+        , RegExp.Def
+        , BooleanFormula.Def
+        , BooleanFormula.BadGreedy
+        , BooleanFormula.LessGreedy
+        , BooleanFormula.LessGreedyCont
+        , BooleanFormula.LessGreedyContDefun
+        , BooleanFormula.LessGreedyContDefunSpecified
+        , BooleanFormula.LessGreedyContDefunSpecified2
+        , BooleanFormula.LessGreedyContDefunSpecified3
+        , BooleanFormula.Alternate.LessGreedy
+        , BooleanFormula.All
 
 
     -- Modules included in this library but not exported.

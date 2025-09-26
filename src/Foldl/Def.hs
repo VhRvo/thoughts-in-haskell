@@ -1,6 +1,6 @@
 module Foldl.Def where
 
-import Prelude ((<>), ($), flip, id)
+import Prelude (flip, id, ($), (<>))
 
 foldl :: (b -> a -> b) -> b -> [a] -> b
 -- foldl combine intial = foldr (flip combine) initial . reverse
@@ -42,11 +42,9 @@ foldl combine initial xs = go xs initial
 foldr :: (a -> b -> b) -> b -> [a] -> b
 foldr combine initial = go
   where
-    go []     = initial
-    go (x:xs) = combine x (go xs)
+    go [] = initial
+    go (x : xs) = combine x (go xs)
 
 reverse :: [a] -> [a]
 reverse [] = []
-reverse (x:xs) = reverse xs <> [x]
-
-
+reverse (x : xs) = reverse xs <> [x]

@@ -1,3 +1,6 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
+{-# HLINT ignore "Avoid lambda" #-}
 module CPS.Normal2 where
 
 import Data.Map (Map, (!?))
@@ -39,13 +42,20 @@ apply _ _ = error "apply: invalid arguments"
 --     Lambda id body -> Closure (\value -> eval body (Map.insert id value env) P.id)
 --     Application e1 e2 -> eval e1 env `apply` eval e2 env
 
+-- evalK :: Expr -> Env -> (Value -> Value) -> Value
+-- evalK expr env k = case expr of
+--   Constant integer -> k (Integer integer)
+--   Add left right -> evalK left env (\leftV -> evalK right env (\rightV -> add leftV rightV))
+--   Variable id -> k (fromJust (env !? id))
+--   Lambda id body -> k (Closure (\value k' -> evalK body (Map.insert id value env) k'))
+--   Application e1 e2 -> evalK e1 env (\func -> evalK e2 env (\arg -> apply func arg k))
 evalK :: Expr -> Env -> (Value -> Value) -> Value
-evalK expr env k = case expr of
-  Constant integer -> k (Integer integer)
-  Add left right -> evalK left env (\leftV -> evalK right env (\rightV -> add leftV rightV))
-  Variable id -> k (fromJust (env !? id))
-  Lambda id body -> k (Closure (\value k' -> evalK body (Map.insert id value env) k'))
-  Application e1 e2 -> evalK e1 env (\func -> evalK e2 env (\arg -> apply func arg k))
+evalK expr env = case expr of
+  Constant integer -> \k -> k (Integer integer)
+  Add left right -> \k -> evalK left env (\leftV -> evalK right env (\rightV -> k (add leftV rightV)))
+  Variable id -> \k -> k (fromJust (env !? id))
+  Lambda id body -> \k -> k (Closure (\value k' -> evalK body (Map.insert id value env) k'))
+  Application e1 e2 -> \k -> evalK e1 env (\func -> evalK e2 env (\arg -> apply func arg k))
 
 -- data ExprK
 --     = ConstantK Identifier Int

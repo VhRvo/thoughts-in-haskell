@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Functor law" #-}
 {-# HLINT ignore "Use <$>" #-}
 {-# HLINT ignore "Redundant $" #-}

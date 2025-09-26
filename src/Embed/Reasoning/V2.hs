@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Redundant $" #-}
 module Embed.Reasoning.V2 where
 
@@ -13,7 +14,6 @@ embed (XS (XZ x)) = YS . fmap YZ $ x
 -- embed (XS (XS x)) = collapse . embed . XS $ x
 embed (XS (XS x)) = collapse . collapse . embed $ x
 
-
 collapse :: forall f a. (Functor f) => Y f (f a) -> Y f a
-collapse (YZ x) = YS . fmap YZ       $ x
+collapse (YZ x) = YS . fmap YZ $ x
 collapse (YS x) = YS . fmap collapse $ x
