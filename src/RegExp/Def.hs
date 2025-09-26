@@ -1,12 +1,12 @@
 module RegExp.Def where
 
 data RegExp
-    = Zero
-    | One
-    | Char Char
-    | Cat RegExp RegExp
-    | Sum RegExp RegExp
-    | Star RegExp
+  = Zero
+  | One
+  | Char Char
+  | Cat RegExp RegExp
+  | Sum RegExp RegExp
+  | Star RegExp
 
 language :: RegExp -> [String]
 language = \case
@@ -48,9 +48,11 @@ accept regExp input =
 acceptStar :: RegExp -> String -> [String]
 acceptStar regExp input =
   let result = accept regExp input
-   in (do
-    rest <- result
-    acceptStar regExp rest) <> [input]
+   in ( do
+          rest <- result
+          acceptStar regExp rest
+      )
+        <> [input]
 
 re1 :: RegExp
 re1 = Cat (Char 'a') (Cat (Char 'b') (Star (Cat (Char 'b') (Char 'a'))))

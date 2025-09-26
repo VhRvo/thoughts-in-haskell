@@ -128,7 +128,3 @@ data Exp1
 --     applyExp1 (E1App e1 e2)
 --   EIf e1 e2 e3 ->
 --     applyExp1 (E1If e1 e2 e3)
-
-
-
-

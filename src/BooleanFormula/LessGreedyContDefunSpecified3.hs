@@ -1,12 +1,13 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Use const" #-}
 module BooleanFormula.LessGreedyContDefunSpecified3 where
 
-import qualified Data.Map.Strict as Map
-import Data.Text
-import Control.Applicative ((<|>))
-import Test.Hspec.Expectations (shouldBe)
 import BooleanFormula.Def
+import Control.Applicative ((<|>))
+import Data.Map.Strict qualified as Map
+import Data.Text
+import Test.Hspec.Expectations (shouldBe)
 
 solve :: BooleanFormula -> Maybe Env
 solve formula = satisfyK True Map.empty formula [] []
@@ -16,6 +17,7 @@ solve formula = satisfyK True Map.empty formula [] []
 -- type Nothing = [(Bool, Env, BooleanFormula, Just)]
 
 type Just = [JustItem]
+
 type Nothing = [NothingItem]
 
 data JustItem
@@ -23,7 +25,6 @@ data JustItem
 
 data NothingItem
   = NothingItem Bool Env BooleanFormula Just
-
 
 applyJust :: Just -> Env -> Maybe Env
 applyJust just env =
@@ -52,27 +53,31 @@ satisfyK expected env formula nothing just =
       satisfyK (not expected) env inner nothing just
     And lhs rhs
       | expected ->
-        satisfyK True env lhs nothing (JustItem True rhs nothing : just)
+          satisfyK True env lhs nothing (JustItem True rhs nothing : just)
       | otherwise ->
-        satisfyK True env lhs
-          (NothingItem False env lhs just : nothing)
-          (JustItem False rhs nothing : just)
+          satisfyK
+            True
+            env
+            lhs
+            (NothingItem False env lhs just : nothing)
+            (JustItem False rhs nothing : just)
     Or lhs rhs
       | expected ->
-        satisfyK False env lhs
-          (NothingItem True env lhs just : nothing)
-          (JustItem True rhs nothing : just)
+          satisfyK
+            False
+            env
+            lhs
+            (NothingItem True env lhs just : nothing)
+            (JustItem True rhs nothing : just)
       | otherwise ->
-        satisfyK False env lhs nothing (JustItem False rhs nothing : just)
+          satisfyK False env lhs nothing (JustItem False rhs nothing : just)
 
 main :: IO ()
 main = do
   solve test1 `shouldBe` Just (Map.fromList [("a", True), ("b", False), ("c", True)])
   solve test2 `shouldBe` Nothing
---   solve test3 `shouldBe` Just (Map.fromList [("a", True)])
+  --   solve test3 `shouldBe` Just (Map.fromList [("a", True)])
   solve test3 `shouldBe` Just (Map.fromList [("a", False), ("b", False), ("c", True)])
   solve test4 `shouldBe` Just (Map.fromList [("a", False), ("b", False), ("c", True)])
+
 --   print (solve' test5)
-
-
-

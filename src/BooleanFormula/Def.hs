@@ -1,18 +1,18 @@
 module BooleanFormula.Def where
 
-import qualified Data.Map.Strict as Map
-import Data.Text
 import Control.Applicative ((<|>))
+import Data.Map.Strict qualified as Map
+import Data.Text
 import Test.Hspec.Expectations (shouldBe)
 
 type Env = Map.Map Text Bool
 
 data BooleanFormula
-    = Var Text
-    | Not BooleanFormula
-    | And BooleanFormula BooleanFormula
-    | Or BooleanFormula BooleanFormula
-    deriving (Eq, Ord, Show)
+  = Var Text
+  | Not BooleanFormula
+  | And BooleanFormula BooleanFormula
+  | Or BooleanFormula BooleanFormula
+  deriving (Eq, Ord, Show)
 
 test1, test2, test3, test4, test5, test6 :: BooleanFormula
 test1 = Var "a" `And` (Not (Var "b") `And` Var "c")

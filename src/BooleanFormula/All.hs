@@ -1,11 +1,11 @@
 module BooleanFormula.All where
 
-import qualified Data.Map.Strict as Map
-import Data.Text
-import Control.Applicative ((<|>))
-import Test.Hspec.Expectations (shouldBe)
 import BooleanFormula.Def
+import Control.Applicative ((<|>))
+import Data.Map.Strict qualified as Map
 import Data.Maybe (listToMaybe)
+import Data.Text
+import Test.Hspec.Expectations (shouldBe)
 
 solve :: BooleanFormula -> Maybe Env
 solve = listToMaybe . satisfy True Map.empty
@@ -23,16 +23,16 @@ satisfy expected env =
       satisfy (not expected) env formula
     And lhs rhs
       | expected -> do
-        env' <- satisfy True env lhs
-        satisfy True env' rhs
+          env' <- satisfy True env lhs
+          satisfy True env' rhs
       | otherwise -> do
-        satisfy False env lhs <|> satisfy False env rhs
+          satisfy False env lhs <|> satisfy False env rhs
     Or lhs rhs
       | expected -> do
-        satisfy True env lhs <|> satisfy True env rhs
+          satisfy True env lhs <|> satisfy True env rhs
       | otherwise -> do
-        env' <- satisfy False env lhs
-        satisfy False env' rhs
+          env' <- satisfy False env lhs
+          satisfy False env' rhs
 
 -- check
 
@@ -43,7 +43,5 @@ main = do
   solve test3 `shouldBe` Just (Map.fromList [("a", True)])
   -- solve test3 `shouldBe` Just (Map.fromList [("a", False), ("b", False), ("c", True)])
   solve test4 `shouldBe` Just (Map.fromList [("a", False), ("b", False), ("c", True)])
+
 --   print (solve' test5)
-
-
-

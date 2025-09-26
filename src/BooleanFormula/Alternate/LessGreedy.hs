@@ -1,9 +1,10 @@
 {-# LANGUAGE EmptyCase #-}
+
 module BooleanFormula.Alternate.LessGreedy where
 
 import BooleanFormula.Def
-import qualified Data.Map.Strict as Map
-import Data.Bifunctor (Bifunctor(first))
+import Data.Bifunctor (Bifunctor (first))
+import Data.Map.Strict qualified as Map
 
 satisfy :: BooleanFormula -> Env -> [(Bool, Env)]
 satisfy formula env =
@@ -22,13 +23,14 @@ satisfy formula env =
     --   (lhs', env') <- satisfy lhs env
     --   (rhs', env'') <- satisfy rhs env'
     --   pure (lhs' && rhs', env'')
-      -- greedy
+    -- greedy
     Or lhs rhs -> do
       -- greedy
       (result, env') <- satisfy lhs env
       if result
         then pure (True, env')
         else satisfy rhs env'
-    --   (lhs', env') <- satisfy lhs env
-    --   (rhs', env'') <- satisfy rhs env'
-    --   pure (lhs' || rhs', env'')
+
+--   (lhs', env') <- satisfy lhs env
+--   (rhs', env'') <- satisfy rhs env'
+--   pure (lhs' || rhs', env'')
