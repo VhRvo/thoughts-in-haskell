@@ -1,10 +1,13 @@
-{-# LANGUAGE EmptyCase #-}
-
-module BooleanFormula.Alternate.LessGreedy where
+module BooleanFormula.Alternate.All where
 
 import BooleanFormula.Def
 import Data.Bifunctor (Bifunctor (first))
 import Data.Map.Strict qualified as Map
+import Data.Maybe (listToMaybe)
+import Test.Hspec.Expectations (shouldBe)
+
+solve :: BooleanFormula -> Maybe Env
+solve formula = listToMaybe . fmap snd . filter fst $ satisfy formula Map.empty
 
 satisfy :: BooleanFormula -> Env -> [(Bool, Env)]
 satisfy formula env =
@@ -34,3 +37,11 @@ satisfy formula env =
 --   (lhs', env') <- satisfy lhs env
 --   (rhs', env'') <- satisfy rhs env'
 --   pure (lhs' || rhs', env'')
+
+main :: IO ()
+main = do
+  solve test1 `shouldBe` Just (Map.fromList [("a", True), ("b", False), ("c", True)])
+  solve test2 `shouldBe` Nothing
+  solve test3 `shouldBe` Just (Map.fromList [("a", True)])
+  -- solve test3 `shouldBe` Just (Map.fromList [("a", False), ("b", False), ("c", True)])
+  solve test4 `shouldBe` Just (Map.fromList [("a", False), ("b", False), ("c", True)])

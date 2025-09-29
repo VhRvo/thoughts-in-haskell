@@ -146,6 +146,12 @@ library
         , MonoidAndContinuation.Flatten
         , ProductOfMonoidIsMonoid
         , InvariantInCPS.Normal
+        , CPS.ThreeSteps.Step0
+        , CPS.ThreeSteps.Step1
+        , CPS.ThreeSteps.Step2
+        , CPS.ThreeSteps.Step3
+        , CPS.Type.Type1
+        , CPS.Type.Type2
         , CPS.Normal
         , CPS.Normal2
         , CPS.Normal3
@@ -287,7 +293,8 @@ library
         , BooleanFormula.LessGreedyContDefunSpecified
         , BooleanFormula.LessGreedyContDefunSpecified2
         , BooleanFormula.LessGreedyContDefunSpecified3
-        , BooleanFormula.Alternate.LessGreedy
+        , BooleanFormula.Alternate.All
+        , BooleanFormula.Alternate.AllCont
         , BooleanFormula.All
 
 
@@ -327,7 +334,7 @@ library
     -- Other library packages from which modules are imported.
     build-depends:
         base
-      , text
+      , text >= 2.1.2
       , containers
       , megaparsec
       , parser-combinators
