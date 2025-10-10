@@ -1,7 +1,7 @@
 module CPS.Type.Type2 where
 
 import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
 
 data Type
   = Base Text
@@ -18,7 +18,7 @@ instance Show Type where
           Base base -> base
           Arrow from to -> "(" <> show' from <> " -> " <> show' to <> ")"
 
-infixr -->
+infixr 9 -->
 
 (-->) :: Type -> Type -> Type
 (-->) = Arrow

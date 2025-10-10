@@ -152,6 +152,8 @@ library
         , CPS.ThreeSteps.Step3
         , CPS.Type.Type1
         , CPS.Type.Type2
+        , CPS.Traversal.Syntax
+        , CPS.Traversal.V1
         , CPS.Normal
         , CPS.Normal2
         , CPS.Normal3
@@ -296,6 +298,12 @@ library
         , BooleanFormula.Alternate.All
         , BooleanFormula.Alternate.AllCont
         , BooleanFormula.All
+        , FlattenTree.Def
+        , FlattenTree.NotCompositional
+        , FlattenTree.Compositional1
+        , FlattenTree.RestrictedSyntaxList
+        , FlattenTree.RestrictedSyntaxNonEmpty
+        , FlattenTree.Essential
 
 
     -- Modules included in this library but not exported.

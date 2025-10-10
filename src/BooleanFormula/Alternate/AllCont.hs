@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+
 {-# HLINT ignore "Avoid lambda" #-}
 module BooleanFormula.Alternate.AllCont where
 
@@ -20,38 +21,57 @@ runListC (ListC cont) = cont
 instance Functor ListC where
   fmap :: (a -> b) -> ListC a -> ListC b
   fmap f (ListC cont) =
-    ListC (\empty cons ->
-      cont empty (\element rest -> cons (f element) rest))
+    ListC
+      ( \empty cons ->
+          cont empty (\element rest -> cons (f element) rest)
+      )
 
 instance Applicative ListC where
   pure :: a -> ListC a
   pure element =
-    ListC (\empty cons ->
-      cons element empty)
+    ListC
+      ( \empty cons ->
+          cons element empty
+      )
 
   (<*>) :: ListC (a -> b) -> ListC a -> ListC b
   (ListC contF) <*> (ListC contX) =
-    ListC (\empty cons ->
-      -- ?
-      contF empty (\function rest ->
-        contX empty (\element rest' ->
-          cons (function element) rest')
-        ))
+    ListC
+      ( \empty cons ->
+          -- ?
+          contF
+            empty
+            ( \function rest ->
+                contX
+                  empty
+                  ( \element rest' ->
+                      cons (function element) rest'
+                  )
+            )
+      )
 
 append :: ListC a -> ListC a -> ListC a
 append (ListC lhs) (ListC rhs) =
-  ListC (\empty cons ->
-    lhs (rhs empty cons)
-      (\element rest ->
-        cons element rest))
+  ListC
+    ( \empty cons ->
+        lhs
+          (rhs empty cons)
+          ( \element rest ->
+              cons element rest
+          )
+    )
 
 instance Monad ListC where
   (>>=) :: ListC a -> (a -> ListC b) -> ListC b
   ListC cont >>= f =
-    ListC (\empty cons ->
-      cont empty (\element rest ->
-        runListC (f element) rest cons))
-
+    ListC
+      ( \empty cons ->
+          cont
+            empty
+            ( \element rest ->
+                runListC (f element) rest cons
+            )
+      )
 
 -- satisfyK :: BooleanFormula -> Env -> forall r. r -> (Bool -> Env -> r -> r) -> r
 -- satisfyK formula env =

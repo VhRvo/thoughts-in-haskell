@@ -1,9 +1,8 @@
 module CPS.ThreeSteps.Step2 where
 
-import qualified CPS.ThreeSteps.Step1 as S1
-
+import CPS.ThreeSteps.Step1 qualified as S1
 import Data.Text (Text)
-import qualified Data.Text as T
+import Data.Text qualified as T
 
 data Exp
   = Trivial Trivial
@@ -14,16 +13,16 @@ data Serious
 
 data Trivial
   = Var Text
---   | Index Int
-  | Lam Text Exp
+  | --   | Index Int
+    Lam Text Exp
 
 fromIndex :: Int -> Text
 fromIndex = ("#" <>) . T.show
 
 transform :: S1.Exp -> Exp
 transform = \case
-    S1.Trivial exp -> Trivial $ trivial exp
-    S1.Serious exp -> Serious $ serious exp
+  S1.Trivial exp -> Trivial $ trivial exp
+  S1.Serious exp -> Serious $ serious exp
   where
     trivial :: S1.Trivial -> Trivial
     trivial = \case
@@ -36,24 +35,42 @@ transform = \case
     serious' exp body =
       case exp of
         S1.Let bound (S1.Trivial fun) (S1.Trivial arg) ->
-            Let bound (trivial fun) (trivial arg) body
+          Let bound (trivial fun) (trivial arg) body
         S1.Let outer (S1.Serious fun@(S1.Let inner _ _)) (S1.Trivial arg) ->
-            serious'
-                fun
-                (Serious
-                  (Let outer (Var (fromIndex inner)) (trivial arg)
-                    body))
+          serious'
+            fun
+            ( Serious
+                ( Let
+                    outer
+                    (Var (fromIndex inner))
+                    (trivial arg)
+                    body
+                )
+            )
         S1.Let outer (S1.Trivial fun) (S1.Serious arg@(S1.Let inner _ _)) ->
-            serious'
-                arg
-                (Serious
-                  (Let outer (trivial fun) (Var (fromIndex inner))
-                    body))
+          serious'
+            arg
+            ( Serious
+                ( Let
+                    outer
+                    (trivial fun)
+                    (Var (fromIndex inner))
+                    body
+                )
+            )
         S1.Let bound (S1.Serious fun@(S1.Let funIndex _ _)) (S1.Serious arg@(S1.Let argIndex _ _)) ->
-            serious'
-              fun
-              (Serious
-                (serious' arg
-                  (Serious
-                    (Let bound (Var (fromIndex funIndex)) (Var (fromIndex argIndex))
-                      body))))
+          serious'
+            fun
+            ( Serious
+                ( serious'
+                    arg
+                    ( Serious
+                        ( Let
+                            bound
+                            (Var (fromIndex funIndex))
+                            (Var (fromIndex argIndex))
+                            body
+                        )
+                    )
+                )
+            )

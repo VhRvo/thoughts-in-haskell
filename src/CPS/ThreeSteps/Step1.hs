@@ -1,8 +1,8 @@
 module CPS.ThreeSteps.Step1 where
 
-import Data.Text (Text)
-import qualified CPS.ThreeSteps.Step0 as S0
+import CPS.ThreeSteps.Step0 qualified as S0
 import Control.Monad.State.Strict
+import Data.Text (Text)
 
 data Exp
   = Trivial Trivial
@@ -18,7 +18,7 @@ data Trivial
 transform :: S0.Exp -> Exp
 transform exp = evalState (go exp) 0
   where
-    go ::  S0.Exp -> State Int Exp
+    go :: S0.Exp -> State Int Exp
     go = \case
       S0.Trivial exp -> Trivial <$> trivial exp
       S0.Serious exp -> Serious <$> serious exp
@@ -32,6 +32,3 @@ transform exp = evalState (go exp) 0
         current <- get
         put (current + 1)
         Let current <$> go fun <*> go arg
-
-
-
