@@ -304,6 +304,15 @@ library
         , FlattenTree.RestrictedSyntaxList
         , FlattenTree.RestrictedSyntaxNonEmpty
         , FlattenTree.Essential
+        , CpsTransformation.Naive
+        , FormattingDemo.Demo
+        , FormattingDemo.TextFormat
+        , Calculating.Compiler.Normal
+        , Calculating.Compiler.Stack
+        , Calculating.Compiler.Stack1
+        , Calculating.Compiler.Stack2
+        , Calculating.Compiler.Complicated.NormalFirstCps
+        , Calculating.Compiler.Complicated.NormalFirstStack
 
 
     -- Modules included in this library but not exported.
@@ -376,6 +385,8 @@ library
       , dlist
       , validation
       , hedis
+      , formatting
+      , double-conversion
 
     -- Directories containing source files.
     hs-source-dirs:   src
