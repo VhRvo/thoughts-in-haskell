@@ -56,14 +56,28 @@ applyCont1 :: [Action'] -> Int -> Int
 applyCont1 =
   \case
     [] -> id
-    OBin' op y : k -> \x' -> evalDefun1 y (IBin' op x' : k)
+    -- OBin' op y : k -> \x' -> evalDefun1 y (IBin' op x' : k)
+
+    -- OBin' op (Val n) : k -> \x' -> evalDefun1 (Val n) (IBin' op x' : k)
+    -- OBin' op (Bin op' xl xr) : k -> \x' -> evalDefun1 (Bin op' xl xr) (IBin' op x' : k)
+
+    OBin' op (Val n) : k -> \x' -> applyCont1 (IBin' op x' : k) n
+    OBin' op (Bin op' xl xr) : k -> \x' -> evalDefun1 xl (OBin' op' xr : IBin' op x' : k)
+
     IBin' op x' : k -> \y' -> applyCont1 k (applyOp op x' y')
 
 evalDefun1 :: Exp -> [Action'] -> Int
 evalDefun1 exp k =
   case exp of
     Val n -> applyCont1 k n
-    Bin op x y -> evalDefun1 x (OBin' op y : k)
+    -- Bin op x y -> evalDefun1 x (OBin' op y : k)
+
+    -- Bin op (Val n) y -> evalDefun1 (Val n) (OBin' op y : k)
+    -- Bin op (Bin op' xl xr) y -> evalDefun1 (Bin op' xl xr) (OBin' op y : k)
+
+    Bin op (Val n) y -> applyCont1 (OBin' op y : k) n
+    Bin op (Bin op' xl xr) y -> evalDefun1 xl (OBin' op' xr : OBin' op y : k)
+
 
 data Tag
   = TExp Exp

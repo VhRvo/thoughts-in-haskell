@@ -133,16 +133,36 @@ _ = ()
     applyDSACont1 (PushAction1 n : rest) s = applyDSACont1 rest (n : s)
     applyDSACont1 (BinAction1 op : rest) s = applyDSACont1 rest (bin op s)
 
-    applyDDSACont1 :: [DDSAction1] -> [DSAction1] -> Stack -> Stack
-    applyDDSACont1 [] = applyDSACont1
-    applyDDSACont1 (DDSConsAction1 x : k') = evalSK'DAKDA x k'
+    -- applyDDSACont1 :: [DDSAction1] -> [DSAction1] -> Stack -> Stack
+    -- applyDDSACont1 [] = applyDSACont1
+    -- applyDDSACont1 (DDSConsAction1 x : k') = evalSK'DAKDA x k'
+
+    -- evalSK'DAKDA :: Exp -> [DDSAction1] -> [DSAction1] -> Stack -> Stack
+    -- evalSK'DAKDA exp k' k s =
+    --   case exp of
+    --     Val n -> applyDDSACont1 k' (PushAction1 n : k) s
+    --     Bin op x y ->
+    --       evalSK'DAKDA y (DDSConsAction1 x : k') (BinAction1 op : k) s
+    -- evalSK'DAKDA :: Exp -> [DDSAction1] -> [DSAction1] -> Stack -> Stack
+    -- evalSK'DAKDA exp k' k s =
+    --   case exp of
+    --     Val n ->
+    --       case k' of
+    --         [] -> applyDSACont1 (PushAction1 n : k) s
+    --         (DDSConsAction1 x : k') -> evalSK'DAKDA x k' (PushAction1 n : k) s
+    --     Bin op x y ->
+    --       evalSK'DAKDA y (DDSConsAction1 x : k') (BinAction1 op : k) s
 
     evalSK'DAKDA :: Exp -> [DDSAction1] -> [DSAction1] -> Stack -> Stack
     evalSK'DAKDA exp k' k s =
       case exp of
-        Val n -> applyDDSACont1 k' (PushAction1 n : k) s
+        Val n ->
+          case k' of
+            [] -> applyDSACont1 k (n : s)
+            (DDSConsAction1 x : k') -> evalSK'DAKDA x k' (PushAction1 n : k) s
         Bin op x y ->
           evalSK'DAKDA y (DDSConsAction1 x : k') (BinAction1 op : k) s
+
 
 data DSCont2
   = Id2

@@ -313,6 +313,18 @@ library
         , Calculating.Compiler.Stack2
         , Calculating.Compiler.Complicated.NormalFirstCps
         , Calculating.Compiler.Complicated.NormalFirstStack
+        , Calculating.Compiler.Complicated.NormalFirstStack2
+        -- , Calculating.Compiler.Complicated.Stack
+        , Calculating.Compiler.Complicated.Stack.Def
+        , Calculating.Compiler.Complicated.Stack.Normal
+        , Calculating.Compiler.Complicated.Stack.Step0ExplicitStack
+        , Calculating.Compiler.Complicated.Stack.Step1Cps
+        , Calculating.Compiler.Complicated.Stack.Step2D17n
+        , Calculating.Compiler.Complicated.Stack.Step3Refining
+        , Calculating.Compiler.Complicated.Stack.Step4Refining
+        , Calculating.Compiler.Complicated.Stack.Step5Unified
+        , Calculating.Compiler.Complicated.Stack.Step6Refining
+        , Calculating.Compiler.Complicated.Stack.Step6Refining2
 
 
     -- Modules included in this library but not exported.
